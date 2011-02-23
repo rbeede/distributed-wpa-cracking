@@ -1,0 +1,27 @@
+#summary Welcome Page
+
+= Introduction =
+
+This is a project undertaken by three graduate students at the University of Colorado in the Spring of 2011.  Our goal was to create a distributed system for doing WPA1/2 password lookups on a large rainbow table.
+
+The rainbow table was obtained from http://www.churchofwifi.org/Project_display.asp?pid=90 and the wpa_psk-h1kari_renderman.torrent torrent.
+
+
+= Project Proposal given for class =
+
+== Abstract ==
+
+There are tools for brute-force cracking WPA1/2 such as coWPAtty and aircrack-ng.  coWPAtty was one of the first to support rainbow lookup tables of precomputed SSID and a large dictionary of commonly used passwords.  Our project will look to improve on the lookup technique of coWPAtty in searching the rainbow table either by modification to the existing code to work on a distributed cluster of machines or with our own implementation.  If time permits we will also look into generating new rainbow tables across the cluster which feature coWPAtty currently lacks.
+
+== Group Members: ==
+* Rodney Beede
+* Ryan Kroiss
+* Arpit Sud
+
+= Project Links =
+
+TODO link to wiki page of developer journals of daily work
+
+TODO instructions for installing
+
+TODO instructions for using
