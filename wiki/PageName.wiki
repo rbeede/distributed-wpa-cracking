@@ -18,6 +18,10 @@ There are tools for brute-force cracking WPA1/2 such as coWPAtty and aircrack-ng
 * Ryan Kroiss
 * Arpit Sud
 
+= Project Timeline =
+
+todo
+
 = Project Links =
 
 TODO link to wiki page of developer journals of daily work
