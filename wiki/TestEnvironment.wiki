@@ -39,6 +39,12 @@ Public Internet addresses:
  ** 198.41.9.2 gateway
  ** No specific DNS (use Google's 8.8.8.8 public DNS)
 
+Private Network addresses:
+ * 192.168.0.0 – 192.168.0.15
+ ** /28 subnet
+ ** TODO gateway
+ ** No specific DNS (use Google's 8.8.8.8 public DNS)
+
 == Access ==
 
 ILO KVM console access is done via Cisco's VPN.  Only Rodney Beede has access to do this.  Used to reboot machine.
