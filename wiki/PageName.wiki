@@ -7,6 +7,17 @@ This is a project undertaken by three graduate students at the University of Col
 
 The rainbow table was obtained from http://www.churchofwifi.org/Project_display.asp?pid=90 and the wpa_psk-h1kari_renderman.torrent torrent.
 
+= Project Links =
+
+[DevelopmentJournal Developer journals of work]
+
+[DeveloperSetup Getting the environment setup and building]
+
+[HowtoInstall Installing a build for use in a cluster]
+
+[HowtoCaptureData Instructions for capturing wireless packets]
+
+[HowtoUse Instructions for using the distributed system to analyze capture data]
 
 = Project Proposal given for class =
 
@@ -37,16 +48,6 @@ There are tools for brute-force cracking WPA1/2 such as coWPAtty and aircrack-ng
 || April 30 - May 5 || Sat – Thu; Finals Week || All || ||
 || May 2 || Report:  Graphs of report data and conclusions.  PowerPoint. || All || ||
 || May 2 || Monday, 7:30PM-10:00PM; Final Exam presentation || All || ||
-
-= Project Links =
-
-TODO link to wiki page of developer journals of daily work
-
-TODO instructions for installing
-
-TODO instructions for using
-
-TODO Build Instructions
 
 = References =
 
