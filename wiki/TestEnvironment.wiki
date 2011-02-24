@@ -1,17 +1,19 @@
 #summary This page lists details on accessing the test environment
 #labels Restrict-View-Commit
 
-= Hardware =
-
 This test environment was provided by Cisco.  They loaned a machine and hosted it in their Boulder office data center.  It will be available from Feb 2011 until May 2011.
 
-It is a Cisco UCS C210 M1 General-Purpose Rack-Mount Server with 64GB of ram and two quad core Intel Xeon processors (8 logical cores).
+Rodney Beede is an intern for Cisco until May 2011.
 
-It has 16 137GB SAS drives for a total of 2,192GB of disk space configured in a single RAID5.
+= Hardware =
 
-6 Gigabit Ethernet cards.  Only two are hooked up.
+Cisco UCS C210 M1 General-Purpose Rack-Mount Server with 64GB of ram and two quad core Intel Xeon processors (8 logical cores).
 
-1 ILO Ethernet card.
+16 137GB SAS drives for a total of 2,192GB of disk space configured in a single RAID5.
+
+6 Gigabit Ethernet cards.  Only two are connected.
+
+1 ILO Ethernet card, connected.
 
 = Host Operating System =
 
