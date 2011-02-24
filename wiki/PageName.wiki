@@ -1,4 +1,5 @@
 #summary Welcome Page
+#labels Featured
 
 = Introduction =
 
