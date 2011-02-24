@@ -23,6 +23,11 @@ Ensure that the compiler, Perl, ssh, svn, etc. are in your system path for the e
 
 Just follow the directions at [http://code.google.com/p/distributed-wpa-cracking/source/checkout]
 
+= Special Note About Checking In Code =
+
+ # You have to be a "Project committer" in the project
+ # You have to specify the --username parameter like this {{{svn ci -m "comment about check-in" --username MYUSERNAME@gmail.com}}}
+
 = Building =
 
 The perl code doesn't need any special build commands.
