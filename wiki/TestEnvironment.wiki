@@ -1,0 +1,47 @@
+#summary This page lists details on accessing the test environment
+#labels Restrict-View-Commit
+
+= Hardware =
+
+This test environment was provided by Cisco.  They loaned a machine and hosted it in their Boulder office data center.  It will be available from Feb 2011 until May 2011.
+
+It is a Cisco UCS C210 M1 General-Purpose Rack-Mount Server with 64GB of ram and two quad core Intel Xeon processors (8 logical cores).
+
+It has 16 137GB SAS drives for a total of 2,192GB of disk space configured in a single RAID5.
+
+6 Gigabit Ethernet cards.  Only two are hooked up.
+
+1 ILO Ethernet card.
+
+= Host Operating System =
+
+Ubuntu Cloud Enterprise Edition 64-bit version 10.10.
+
+= Virtual Machines =
+
+ILO network address (accessible only by Cisco employees with VPN access) is 10.94.170.229.
+
+
+= Networking =
+
+ILO network address (accessible only by Cisco employees with VPN access) is 10.94.170.229.
+
+Public Internet addresses:
+ * 198.41.9.70
+ ** /24 subnet
+ ** 198.41.9.2 gateway
+ ** No specific DNS (use Google's 8.8.8.8 public DNS)
+
+== Access ==
+
+ILO KVM console access is done via Cisco's VPN.  Only Rodney Beede has access to do this.  Used to reboot machine.
+
+=== SSH to host operating system ===
+
+Only Rodney Beede has access to do this.
+
+Port 65022 on public Internet address.
+
+=== SSH to VMs ===
+
+See [#Virtual Machines] section
