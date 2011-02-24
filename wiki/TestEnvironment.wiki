@@ -17,11 +17,13 @@ Cisco UCS C210 M1 General-Purpose Rack-Mount Server with 64GB of ram and two qua
 
 = Host Operating System =
 
-Ubuntu Cloud Enterprise Edition 64-bit version 10.10.
+VMware vSphere HypervisorTM (ESXi) 4.1
 
 = Virtual Machines =
 
 There are 9 total VMs.  All are on a private network.  Only 1 is on the public Internet.  You SSH into this machine which serves as an access point and job task manager.  You don't run actual jobs on this node since it is smaller than the others.  It is used to ssh onto other machines.
+
+Ubuntu Server 64-bit 10.10 is used for each VM.
 
 198.41.9.70:22 is the SSH access for this machine.  It has a private network address of TODO.
 
