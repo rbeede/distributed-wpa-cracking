@@ -13,6 +13,8 @@ The rainbow table was obtained from http://www.churchofwifi.org/Project_display.
 
 [DeveloperSetup Getting the environment setup and building]
 
+[TestEnvironment Testing environment]
+
 [HowtoInstall Installing a build for use in a cluster]
 
 [HowtoCaptureData Instructions for capturing wireless packets]
