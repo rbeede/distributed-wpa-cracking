@@ -19,8 +19,15 @@ Ubuntu Cloud Enterprise Edition 64-bit version 10.10.
 
 = Virtual Machines =
 
-ILO network address (accessible only by Cisco employees with VPN access) is 10.94.170.229.
+There are 9 total VMs.  All are on a private network.  Only 1 is on the public Internet.  You SSH into this machine which serves as an access point and job task manager.  You don't run actual jobs on this node since it is smaller than the others.  It is used to ssh onto other machines.
 
+198.41.9.70:22 is the SSH access for this machine.  It has a private network address of TODO.
+
+Node workers are in the private network range of TODO to TODO.
+
+Your home directory is shared among all virtual machines.
+
+Contact Rodney Beede if you need your SSH key and login.
 
 = Networking =
 
@@ -44,4 +51,4 @@ Port 65022 on public Internet address.
 
 === SSH to VMs ===
 
-See [#Virtual Machines] section
+See [#Virtual_Machines] section
