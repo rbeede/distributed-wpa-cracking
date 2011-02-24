@@ -42,6 +42,7 @@ Public Internet addresses:
  ** /24 subnet
  ** 198.41.9.2 gateway
  ** No specific DNS (use Google's 8.8.8.8 public DNS)
+ ** bldr-vh29-dmz.cisco.com is the DNS name
 
 Private Network addresses:
  * 192.168.0.0 – 192.168.0.15
