@@ -3,17 +3,17 @@
 = Prerequistes =
 
  # A Linux system
- #* Use an Ubuntu Virtual Machine if you like
+ # * Use an Ubuntu Virtual Machine if you like
  # gcc/g++ installed
  # Perl 5.8 or later
  # A rainbow table
- #* Try this torrent
+ # * Try this torrent [wpa_psk-h1kari_renderman.torrent]
  # Public and private ssh keys with no password for automatic running
  # ssh and sshd (usually included in your Linux distro)
  # You may wish to use the Eclipse IDE with CDT [http://www.eclipse.org/cdt/]
- #* Or whatever text editor you like
+ # * Or whatever text editor you like
  # SVN 1.6.15 [http://subversion.apache.org/packages.html] or later
- #* For Windows I like Win32Svn in the plain svn-win32-1.6.15.zip form
+ # * For Windows I like Win32Svn in the plain svn-win32-1.6.15.zip form
 
 = Environment Setup =
 
