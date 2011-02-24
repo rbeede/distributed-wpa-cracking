@@ -1,0 +1,17 @@
+#summary Journal entries of developer work
+
+= Introduction =
+
+Simply append your progress as you go with brief details of what you've done and plan on doing next.
+
+Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
+
+= 2011-02-23 20:41 - Rodney Beede - Got the project wiki and hosting up =
+
+I managed to get a Google Code project hosting space setup with the wiki for tracking our progress on this class project.  We'll use the svn repository for storing our code.  It has a 4GB size limit which should be big enough to even hold the virtual machine running http://www.backtrack-linux.org/
+
+= 2011-02-23 20:46 - Rodney Beede - Cisco hardware for the cluster =
+
+This is taking longer than I would have liked.  The machine is setup with the OS, but Cisco is taking a long time to get a public Internet IP address for the machine.  I hope to have it by this Friday.
+
+= next entry here =
