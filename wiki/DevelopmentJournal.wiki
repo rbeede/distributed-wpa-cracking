@@ -14,4 +14,9 @@ I managed to get a Google Code project hosting space setup with the wiki for tra
 
 This is taking longer than I would have liked.  The machine is setup with the OS, but Cisco is taking a long time to get a public Internet IP address for the machine.  I hope to have it by this Friday.
 
+= 2011-02-24 18:44 - Rodney Beede - Cisco hardware for the cluster =
+
+The machine has been give an IP and the information placed in TestEnvironment.  However a hardware issue has arisen which won't be addressed until tomorrow.
+
+
 = next entry here =
