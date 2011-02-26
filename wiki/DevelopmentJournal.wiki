@@ -18,5 +18,10 @@ This is taking longer than I would have liked.  The machine is setup with the OS
 
 The machine has been give an IP and the information placed in TestEnvironment.  However a hardware issue has arisen which won't be addressed until tomorrow.
 
+= 2011-02-26 11:22 - Rodney Beede - Cluster hardware and architecture =
+
+Cisco has removed the faulty memory from the hardware.  I'm running memtest on it now.
+
+I wrote some documentation on architecture ideas.
 
 = next entry here =
