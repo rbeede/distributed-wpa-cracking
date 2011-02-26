@@ -60,11 +60,9 @@ Private Network addresses:
 
 ILO KVM console access is done via Cisco's VPN.  Only Rodney Beede has access to do this.  Used to reboot machine.
 
-=== SSH to host operating system ===
+=== VMware access to host operating system ===
 
 Only Rodney Beede has access to do this.
-
-Port 65022 on public Internet address.
 
 === SSH to VMs ===
 
