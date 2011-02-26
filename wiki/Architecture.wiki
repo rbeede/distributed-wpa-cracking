@@ -1,6 +1,8 @@
 #summary Design architecture of the system
 #labels c
 
+= Overview =
+
 A large rainbow table of pre-generated wireless encryption handshakes will be divided up among a number of worker nodes.  The table consists of a large number of well known wireless SSIDs along with a dictionary of hundreds of thousands of common password variants.  The table used will have a complete size of 36GB.
 
 One master node will have scripts and software that can deploy via ssh and secure file copy the worker node code.  Optionally via an NFS mount the rainbow table file could be shared from this master node.  For our implementation the rainbow table will be copied to each worker node manually to provide a local copy to decrease required startup time of local worker nodes.
@@ -14,3 +16,35 @@ If a worker finds a solution it will output the result to a file on disk as spec
 If no solution is found the master will create a NO_SOLUTION file for the job.  All workers will have already finished.
 
 The master will periodically query the workers for their progress.  If a network error occurs the master will try to reestablish the connection since the worker may still be doing actual work.
+
+= Worker Node =
+
+Go over this architecture idea.  We'll need to modify coWPAtty to
+accept some command line arguments to startup, read it's byte offsets
+of the rainbow table, and listen on a tcp socket.  It should also save
+the found solution (if any) to disk and have a way to kill a running
+thread that is doing a search when it receives a signal via tcp.
+
+In addition if the tcp connection drops it should listen and
+reestablish with some kind of job progress status return.  Something
+like "still running job 12345" would be good.
+
+So the tcp start command received over the socket looks something like:
+STARTJOB 12345 /path/to/capture/data.file /path/to/output/directory
+
+tcp progress command
+JOBPROGRESS 12345
+
+returns one of
+    INPROGRESS
+    NOTRUNNING            (means either job # 12345 isn't the current
+one being run or no solution was found
+
+KILLJOB 12345
+      Stops the running thread
+
+
+Only 1 job should be allowed to run at a time.  No queue on the worker
+is necessary.
+
+= Master Node =
