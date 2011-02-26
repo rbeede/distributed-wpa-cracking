@@ -25,11 +25,11 @@ There are 9 total VMs.  All are on a private network.  Only 1 is on the public I
 
 Ubuntu Server 64-bit 10.10 is used for each VM.
 
-198.41.9.70:22 is the SSH access for this machine.  It has a private network address of TODO.
+198.41.9.???:22 is the SSH access for this machine.  It has a private network address of TODO.
 
-Node workers are in the private network range of TODO to TODO.
+Node workers are in the private network range specified in the [#Networking] section.
 
-Your home directory is shared among all virtual machines.
+Your home directory is shared among all virtual machines.  Your login username is the same across all, but your password is not synchronized.  It is recommended to setup ssh key pairs in your home directory for access to other machines.
 
 Contact Rodney Beede if you need your SSH key and login.
 
@@ -43,6 +43,11 @@ Public Internet addresses:
  ** 198.41.9.2 gateway
  ** No specific DNS (use Google's 8.8.8.8 public DNS)
  ** bldr-vh29-dmz.cisco.com is the DNS name
+ ** This is the VMware Hypervisor ESXi 4.1 host system
+ * 198.41.9.???
+ ** Same as 198.41.9.0/24
+ ** No DNS name
+ ** This is the Virtual Machine cluster master node accessible via the public Internet over ssh
 
 Private Network addresses:
  * 192.168.0.0 – 192.168.0.15
