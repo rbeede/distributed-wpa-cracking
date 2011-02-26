@@ -67,3 +67,7 @@ Only Rodney Beede has access to do this.
 === SSH to VMs ===
 
 See [#Virtual_Machines] section
+
+= References =
+
+https://help.ubuntu.com/community/SettingUpNFSHowTo
