@@ -44,6 +44,7 @@ Public Internet addresses:
  ** No specific DNS (use Google's 8.8.8.8 public DNS)
  ** bldr-vh29-dmz.cisco.com is the DNS name
  ** This is the VMware Hypervisor ESXi 4.1 host system
+
  * 198.41.9.???
  ** Same as 198.41.9.0/24
  ** No DNS name
