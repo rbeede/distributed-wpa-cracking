@@ -1,0 +1,16 @@
+#summary Design architecture of the system
+#labels c
+
+A large rainbow table of pre-generated wireless encryption handshakes will be divided up among a number of worker nodes.  The table consists of a large number of well known wireless SSIDs along with a dictionary of hundreds of thousands of common password variants.  The table used will have a complete size of 36GB.
+
+One master node will have scripts and software that can deploy via ssh and secure file copy the worker node code.  Optionally via an NFS mount the rainbow table file could be shared from this master node.  For our implementation the rainbow table will be copied to each worker node manually to provide a local copy to decrease required startup time of local worker nodes.
+
+Each worker node will load a certain portion of the rainbow table completely into memory.  The portion will be given by the master node.  The code on each worker will then run as a service accepting jobs from the master node by listening on a TCP socket.
+
+A command on the master node will specify input capture data for a job.  A job will then be triggered by the master who will give each worker node a copy of the wireless capture data and instruct them to start processing via a TCP socket start command.  The master node maintains this TCP connection for the duration of the job.
+
+If a worker finds a solution it will output the result to a file on disk as specified by the job command from the master.  The master will notice the result on disk and signal the other workers to stop if they haven't already.
+
+If no solution is found the master will create a NO_SOLUTION file for the job.  All workers will have already finished.
+
+The master will periodically query the workers for their progress.  If a network error occurs the master will try to reestablish the connection since the worker may still be doing actual work.
