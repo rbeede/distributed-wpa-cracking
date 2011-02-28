@@ -1,6 +1,6 @@
 #summary Instructions for setting up how to capture wireless data
 
-= Prerequites =
+= Prerequisites =
 
 
 
