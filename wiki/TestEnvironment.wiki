@@ -25,7 +25,7 @@ There are 9 total VMs.  All are on a private network.  Only 1 is on the public I
 
 Ubuntu Server 64-bit 10.10 is used for each VM.
 
-198.41.9.71:22 is the SSH access for this machine.  It has a private network address of 192.168.0.1.
+univ-colo-vm-198-41-9-71.cisco.com:22 is the SSH access for this machine.  It has a private network address of 192.168.0.1.
 
 Node workers are in the private network range specified in the [#Networking] section.
 
