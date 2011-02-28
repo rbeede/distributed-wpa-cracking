@@ -39,24 +39,24 @@ ILO network address (accessible only by Cisco employees with VPN access) is 10.9
 
 Public Internet addresses:
  * 198.41.9.70
- ** /24 subnet
- ** 198.41.9.2 gateway
- ** No specific DNS (use Google's 8.8.8.8 public DNS)
- ** bldr-vh29-dmz.cisco.com is the DNS name
- ** This is the VMware Hypervisor ESXi 4.1 host system
+  * /24 subnet
+  * 198.41.9.2 gateway
+  * No specific DNS (use Google's 8.8.8.8 public DNS)
+  * bldr-vh29-dmz.cisco.com is the DNS name
+  * This is the VMware Hypervisor ESXi 4.1 host system
 
  * 198.41.9.71
- ** Same as 198.41.9.0/24
- ** univ-colo-vm-198-41-9-71.cisco.com
- ** This is the Virtual Machine cluster master node accessible via the public Internet over ssh
+  * Same as 198.41.9.0/24
+  * univ-colo-vm-198-41-9-71.cisco.com
+  * This is the Virtual Machine cluster master node accessible via the public Internet over ssh
 
 Private Network addresses:
  * 192.168.0.0 – 192.168.0.15
- ** /28 subnet
- ** Netmask is 255.255.255.240
- ** TODO gateway
- ** No specific DNS (use Google's 8.8.8.8 public DNS)
- ** You access these nodes from the master VM node univ-colo-vm-198-41-9-71.cisco.com all via ssh.
+  * /28 subnet
+  * Netmask is 255.255.255.240
+  * TODO gateway
+  * No specific DNS (use Google's 8.8.8.8 public DNS)
+  * You access these nodes from the master VM node univ-colo-vm-198-41-9-71.cisco.com all via ssh.
 
 == Access ==
 
