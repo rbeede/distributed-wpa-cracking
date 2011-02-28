@@ -53,7 +53,7 @@ Public Internet addresses:
 Private Network addresses:
  * 192.168.0.0 – 192.168.0.15
  ** /28 subnet
- *** Network is 255.255.255.240
+ ** Netmask is 255.255.255.240
  ** TODO gateway
  ** No specific DNS (use Google's 8.8.8.8 public DNS)
  ** You access these nodes from the master VM node univ-colo-vm-198-41-9-71.cisco.com all via ssh.
