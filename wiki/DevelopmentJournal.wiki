@@ -24,4 +24,8 @@ Cisco has removed the faulty memory from the hardware.  I'm running memtest on i
 
 I wrote some documentation on architecture ideas.
 
+= 2011-02-28 7:54 - Rodney Beede - Cluster hardware =
+
+We received another public IP address allocation from Cisco.  I've updated the test environment page accordingly.
+
 = next entry here =
