@@ -33,6 +33,8 @@ Node workers are in the private network range specified in the [#Networking] sec
 
 Your home directory is shared among all virtual machines.  Your login username is the same across all, but your password is not synchronized.  It is recommended to setup ssh key pairs in your home directory for access to other machines.
 
+See the /etc/hosts file on any VM for dns entires to use.
+
 Contact Rodney Beede if you need your SSH key and login.
 
 = Networking =
