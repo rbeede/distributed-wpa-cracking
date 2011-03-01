@@ -28,4 +28,7 @@ I wrote some documentation on architecture ideas.
 
 We received another public IP address allocation from Cisco.  I've updated the test environment page accordingly.
 
+= 2011-02-28 20:09 - Rodney Beede - Cluster hardware =
+
+I have the master node mostly configured.  I accidentally locked myself out of ssh and will reset it.
 = next entry here =
