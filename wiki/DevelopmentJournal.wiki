@@ -31,4 +31,12 @@ We received another public IP address allocation from Cisco.  I've updated the t
 = 2011-02-28 20:09 - Rodney Beede - Cluster hardware =
 
 I have the master node mostly configured.  I accidentally locked myself out of ssh and will reset it.
+
+= 2011-02-28 20:28 - Rodney Beede - Cluster almost ready =
+
+I've finished the OS configuration of the VMs for 1 master and 1 node.  All I need to do is adjust the server times and clone the worker node.
+
+In addition I need to get in contact with Cisco about increasing the ram to 64GB.
+
+
 = next entry here =
