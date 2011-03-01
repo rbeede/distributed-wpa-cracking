@@ -5,6 +5,8 @@ This test environment was provided by Cisco.  They loaned a machine and hosted i
 
 Rodney Beede is an intern for Cisco until May 2011.
 
+<wiki:toc />
+
 = Hardware =
 
 Cisco UCS C210 M1 General-Purpose Rack-Mount Server with 64GB of ram and two quad core Intel Xeon processors (8 logical cores).
@@ -69,6 +71,19 @@ Only Rodney Beede has access to do this.
 === SSH to VMs ===
 
 See [#Virtual_Machines] section
+
+= Common Account =
+
+DIST-WPA is the username and group for a common user for running the actual project code and services.
+
+ssh -i /home/DIST-WPA/group-shared/id_rsa DIST-WPA@192.168.0.X for an interactive session for debugging (login to the master as your own username first so we can tell who is using the common account).
+
+Place code files in /home/DIST-WPA/group-shared
+This directory has the group sticky bit set and the default umask is 007.  Please make sure you leave files/folders group readable and writable.
+
+An automated script run from the master will automatically ssh onto all nodes for starting the system.
+
+The command is {{{TODO}}}
 
 = References =
 
