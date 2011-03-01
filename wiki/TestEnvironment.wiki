@@ -52,12 +52,16 @@ Public Internet addresses:
   * univ-colo-vm-198-41-9-71.cisco.com
   * This is the Virtual Machine cluster master node accessible via the public Internet over ssh
 
+ * 198.41.9.72
+  * Used by Rodney only for doing file copies to master
+
 Private Network addresses:
  * 192.168.0.0 – 192.168.0.15
   * /28 subnet
   * Netmask is 255.255.255.240
-  * TODO gateway
-  * No specific DNS (use Google's 8.8.8.8 public DNS)
+  * No gateway
+  * No DNS
+   * /etc/hosts on all VMs have dns names set
   * You access these nodes from the master VM node univ-colo-vm-198-41-9-71.cisco.com all via ssh.
 
 == Access ==
