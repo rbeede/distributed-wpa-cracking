@@ -38,5 +38,8 @@ I've finished the OS configuration of the VMs for 1 master and 1 node.  All I ne
 
 In addition I need to get in contact with Cisco about increasing the ram to 64GB.
 
+= 2011-03-03 11:11 - Rodney Beede - RAM replaced =
+
+The ram has been replaced.  I'm going to try to get all nodes online today.
 
 = next entry here =
