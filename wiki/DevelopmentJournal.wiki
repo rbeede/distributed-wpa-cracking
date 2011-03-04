@@ -42,4 +42,8 @@ In addition I need to get in contact with Cisco about increasing the ram to 64GB
 
 The ram has been replaced.  I'm going to try to get all nodes online today.
 
+= 2011-03-04 10:27 - Rodney Beede - Cluster Online =
+
+The hardware and VMs are all setup and usable for login.  I will copy the ssh_known_hosts and rainbow table to all machines today.
+
 = next entry here =
