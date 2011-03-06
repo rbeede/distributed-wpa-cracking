@@ -45,5 +45,13 @@ The ram has been replaced.  I'm going to try to get all nodes online today.
 = 2011-03-04 10:27 - Rodney Beede - Cluster Online =
 
 The hardware and VMs are all setup and usable for login.  I will copy the ssh_known_hosts and rainbow table to all machines today.
+ 
+= 2011-03-05 23:15 - Rodney Beede - Data on cluster =
+
+Spent several hours getting the 36GB rainbow table copied onto each node's local disk.
+
+Setup ssh_known_hosts on all nodes so all nodes would already be auto-trusted for all users.
+
+E-mailed team about performance of coWPAtty unmodified and standalone from disk.  Does it make sense when it can run a lookup over ~996,000 passwords from disk in about 36 seconds?  What advantage is there in pre-caching the rainbow table in memory?  Multiple queries as a service perhaps?
 
 = next entry here =
