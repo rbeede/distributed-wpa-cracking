@@ -1,5 +1,4 @@
 #summary Design architecture of the system
-#labels c
 
 = Overview =
 
@@ -48,3 +47,5 @@ Only 1 job should be allowed to run at a time.  No queue on the worker
 is necessary.
 
 = Master Node =
+
+Maybe a Java Web Service or app.  Possibly WSDL or REST interface or maybe just plain HTTP POST
