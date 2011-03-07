@@ -91,6 +91,10 @@ An automated script run from the master will automatically ssh onto all nodes fo
 
 The command is {{{TODO}}}
 
+= Rainbow Table =
+
+Each local node (not the master) has a directory */localdata/* which holds the 40GB rainbow table.
+
 = References =
 
 https://help.ubuntu.com/community/SettingUpNFSHowTo
