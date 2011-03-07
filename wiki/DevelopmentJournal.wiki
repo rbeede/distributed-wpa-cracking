@@ -6,46 +6,12 @@ Simply append your progress as you go with brief details of what you've done and
 
 Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
-= 2011-02-23 20:41 - Rodney Beede - Got the project wiki and hosting up =
+Newest at top
 
-I managed to get a Google Code project hosting space setup with the wiki for tracking our progress on this class project.  We'll use the svn repository for storing our code.  It has a 4GB size limit which should be big enough to even hold the virtual machine running http://www.backtrack-linux.org/
+= 2011-03-07 16:36 - Ryan Kroiss - Up and running =
 
-= 2011-02-23 20:46 - Rodney Beede - Cisco hardware for the cluster =
+Successfully accessed cluster and checked out code
 
-This is taking longer than I would have liked.  The machine is setup with the OS, but Cisco is taking a long time to get a public Internet IP address for the machine.  I hope to have it by this Friday.
-
-= 2011-02-24 18:44 - Rodney Beede - Cisco hardware for the cluster =
-
-The machine has been give an IP and the information placed in TestEnvironment.  However a hardware issue has arisen which won't be addressed until tomorrow.
-
-= 2011-02-26 11:22 - Rodney Beede - Cluster hardware and architecture =
-
-Cisco has removed the faulty memory from the hardware.  I'm running memtest on it now.
-
-I wrote some documentation on architecture ideas.
-
-= 2011-02-28 7:54 - Rodney Beede - Cluster hardware =
-
-We received another public IP address allocation from Cisco.  I've updated the test environment page accordingly.
-
-= 2011-02-28 20:09 - Rodney Beede - Cluster hardware =
-
-I have the master node mostly configured.  I accidentally locked myself out of ssh and will reset it.
-
-= 2011-02-28 20:28 - Rodney Beede - Cluster almost ready =
-
-I've finished the OS configuration of the VMs for 1 master and 1 node.  All I need to do is adjust the server times and clone the worker node.
-
-In addition I need to get in contact with Cisco about increasing the ram to 64GB.
-
-= 2011-03-03 11:11 - Rodney Beede - RAM replaced =
-
-The ram has been replaced.  I'm going to try to get all nodes online today.
-
-= 2011-03-04 10:27 - Rodney Beede - Cluster Online =
-
-The hardware and VMs are all setup and usable for login.  I will copy the ssh_known_hosts and rainbow table to all machines today.
- 
 = 2011-03-05 23:15 - Rodney Beede - Data on cluster =
 
 Spent several hours getting the 36GB rainbow table copied onto each node's local disk.
@@ -54,4 +20,42 @@ Setup ssh_known_hosts on all nodes so all nodes would already be auto-trusted fo
 
 E-mailed team about performance of coWPAtty unmodified and standalone from disk.  Does it make sense when it can run a lookup over ~996,000 passwords from disk in about 36 seconds?  What advantage is there in pre-caching the rainbow table in memory?  Multiple queries as a service perhaps?
 
-= next entry here =
+= 2011-03-04 10:27 - Rodney Beede - Cluster Online =
+
+The hardware and VMs are all setup and usable for login.  I will copy the ssh_known_hosts and rainbow table to all machines today.
+
+= 2011-03-03 11:11 - Rodney Beede - RAM replaced =
+
+The ram has been replaced.  I'm going to try to get all nodes online today.
+
+= 2011-02-28 20:28 - Rodney Beede - Cluster almost ready =
+
+I've finished the OS configuration of the VMs for 1 master and 1 node.  All I need to do is adjust the server times and clone the worker node.
+
+In addition I need to get in contact with Cisco about increasing the ram to 64GB.
+
+= 2011-02-28 20:09 - Rodney Beede - Cluster hardware =
+
+I have the master node mostly configured.  I accidentally locked myself out of ssh and will reset it.
+
+= 2011-02-28 7:54 - Rodney Beede - Cluster hardware =
+
+We received another public IP address allocation from Cisco.  I've updated the test environment page accordingly.
+
+= 2011-02-26 11:22 - Rodney Beede - Cluster hardware and architecture =
+
+Cisco has removed the faulty memory from the hardware.  I'm running memtest on it now.
+
+I wrote some documentation on architecture ideas.
+
+= 2011-02-24 18:44 - Rodney Beede - Cisco hardware for the cluster =
+
+The machine has been give an IP and the information placed in TestEnvironment.  However a hardware issue has arisen which won't be addressed until tomorrow.
+
+= 2011-02-23 20:46 - Rodney Beede - Cisco hardware for the cluster =
+
+This is taking longer than I would have liked.  The machine is setup with the OS, but Cisco is taking a long time to get a public Internet IP address for the machine.  I hope to have it by this Friday.
+
+= 2011-02-23 20:41 - Rodney Beede - Got the project wiki and hosting up =
+
+I managed to get a Google Code project hosting space setup with the wiki for tracking our progress on this class project.  We'll use the svn repository for storing our code.  It has a 4GB size limit which should be big enough to even hold the virtual machine running http://www.backtrack-linux.org/
