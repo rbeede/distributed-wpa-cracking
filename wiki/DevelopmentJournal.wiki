@@ -8,6 +8,10 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+= 2011-03-09 15:26 - Arpit Sud - How to Capture Data   =
+
+Created the Wiki page HowtoCaptureData.
+
 = 2011-03-07 16:36 - Ryan Kroiss - Up and running =
 
 Successfully accessed cluster and checked out code
