@@ -1,7 +1,8 @@
 #summary Instructions for setting up how to capture wireless data
 
 = Prerequisites =
-
+# aircrack-ng suite (we will be using airmon-ng, aireplay-ng, airodump-ng in this article)
+# 
 
 
 
@@ -9,3 +10,6 @@
 
  # Step 1
  # Step 2
+
+= References =
+http://www.aircrack-ng.org/doku.php?id=cracking_wpa
