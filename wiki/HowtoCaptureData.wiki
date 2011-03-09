@@ -1,15 +1,31 @@
 #summary Instructions for setting up how to capture wireless data
 
 = Prerequisites =
-# aircrack-ng suite (we will be using airmon-ng, aireplay-ng, airodump-ng in this article)
-# 
+  # aircrack-ng suite (we will be using airmon-ng, aireplay-ng, airodump-ng in this article)
+  # A compatible wireless card
+  # MAC address of the access point(AP) `<MAC_AP>`
+  # MAC address of the client connecting to the AP `<MAC_CLIENT>`
+  # Channel used by AP `<CHANNEL_AP>`
+  # Wireless interface used for packet capture `<WLANX>`
 
+= Injection Test =
+Before you can start packet capture, you must test whether you can successfully perform an injection test to make sure that your wireless card works with aircrack-ng suite of tools.
+ # Step 1: Set your card to monitor mode
+{{{
+airmon-ng start <WLANX> <CHANNEL_AP>
+}}}
 
+ # Step 2: Use aireplay-ng to perform injection
+{{{
+ aireplay-ng --test -a <MAC_AP> <WLANX>
+}}}
 
-= Details =
+= Packet Capture =
 
  # Step 1
  # Step 2
 
 = References =
+http://www.aircrack-ng.org/
+http://www.aircrack-ng.org/doku.php?id=compatibility_drivers
 http://www.aircrack-ng.org/doku.php?id=cracking_wpa
