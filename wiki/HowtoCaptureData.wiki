@@ -1,6 +1,7 @@
 #summary Instructions for setting up how to capture wireless data
 
 = Prerequisites =
+  # Permission from the owner(s) of wireless network(s)
   # aircrack-ng suite (we will be using airmon-ng, aireplay-ng, airodump-ng in this article)
   # A compatible wireless card
   # MAC address of the access point(AP) `<MAC_AP>`
@@ -9,12 +10,12 @@
 
 = Injection Test =
 Before you can start packet capture, you must test whether you can successfully perform an injection test to make sure that your wireless card works with aircrack-ng suite of tools.
- # Step 1: Set your card to monitor mode
+ * Step 1: Set your card to monitor mode
 {{{
 airmon-ng start <WLANX> <CHANNEL_AP>
 }}}
 
- # Step 2: Use aireplay-ng to perform injection
+ * Step 2: Use aireplay-ng to perform injection
 {{{
  aireplay-ng --test -a <MAC_AP> <WLANX>
 }}}
@@ -22,24 +23,22 @@ Analyse the output to see your wireless card can successfully inject packets.
 
 = Packet Capture =
 
- # Step 1: Set your card to monitor mode
-This step is not required, if your card is already in monitor mode.
+ * Step 1: Set your card to monitor mode. This step is not required, if your card is already in monitor mode.
 {{{
 airmon-ng start <WLANX> <CHANNEL_AP>
 }}}
 
- # Step 2: Start packet capture
+ * Step 2: Start packet capture
 {{{
 airodump-ng -c <CHANNEL_AP> --bssid <MAC_AP> -w <CAPTURE_FILENAME> <WLANX>
 }}}
-Here `<CAPTURE_FILENAME>` is the prefix for files to which the capture is written. Please remember that in order to crack WPA/WPA2-PSK a handshake between a client and AP must be captured by airodump-ng. Therefore, you must continue to capture packets until you see the text "WPA Handshake" on the top-right corner of the airodump-ng screen.
+          Here `<CAPTURE_FILENAME>` is the prefix for files to which the capture is written. Please remember that in order to crack WPA/WPA2-PSK a handshake between a client and AP must be captured by airodump-ng. Therefore, you must continue to capture packets until you see the text "WPA Handshake" on the top-right corner of the airodump-ng screen.
 
-  # Step 3: Deauth a client(Optional, but recommended)
-We can use aireplay-ng in order to send a deauthentication packet to a client, which then attempts to reauthenticate with the AP, so that we can capture the handshake between the client and AP. While airodump-ng is running, please make note of the MAC address of a client `<MAC_CLIENT>` currently connected to the AP and in a separate console run the following command.
+  * Step 3: Deauth a client(Optional, but recommended). We can use aireplay-ng in order to send a deauthentication packet to a client, which then attempts to reauthenticate with the AP, so that we can capture the handshake between the client and AP. While airodump-ng is running, please make note of the MAC address of a client `<MAC_CLIENT>` currently connected to the AP and in a separate console run the following command.
 {{{
 aireplay-ng -0 <NUM_PACKETS> -a <MAC_AP> -c <MAC_client> <WLANX>
 }}}
-Here `<NUM_PACKETS>` is the number of deauthentication packets to send. Usually a single packet is enough, but you may want to re-try with more packets, in case of failed attempts.
+               Here `<NUM_PACKETS>` is the number of deauthentication packets to send. Usually a single packet is enough, but you may want to re-try with more packets, in case of failed attempts.
 
 = References =
   * [http://www.aircrack-ng.org/]
