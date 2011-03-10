@@ -8,6 +8,12 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+= 2011-03-10 13:15 - Ryan Kroiss - Listener for master node =
+
+Created simple socket program to listen for messages over a certain port.  This 
+will run on the master.  When it receives a valid message, it will start up the
+client nodes to process the request.
+
 = 2011-03-09 22:18 - Arpit Sud - Data Capture script   =
 
 Uploaded script for data capture to SVN.
