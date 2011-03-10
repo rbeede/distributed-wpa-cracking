@@ -4,6 +4,7 @@
   # Permission from the owner(s) of wireless network(s)
   # aircrack-ng suite (we will be using airmon-ng, aireplay-ng, airodump-ng in this article)
   # A compatible wireless card
+  # You must have root access in order to run all the commands below.
   # MAC address of the access point(AP) `<MAC_AP>`
   # Channel used by AP `<CHANNEL_AP>`
   # Wireless interface used for packet capture `<WLANX>`
@@ -22,6 +23,18 @@ airmon-ng start <WLANX> <CHANNEL_AP>
 Analyse the output to see your wireless card can successfully inject packets.
 
 = Packet Capture =
+_Tip_: You can use the script startcapture to perform data capture , instead of performing the steps below.
+To obtain the script run the command:
+{{{
+svn checkout http://distributed-wpa-cracking.googlecode.com/svn/trunk/datacapture
+cd datacapture
+chmod u+x startcapture
+}}}
+The script takes the following parameters as input:
+{{{
+startcapture -i <WLANX> -c <CHANNEL_AP> -b <MAC_AP> -w <MAC_CLIENT> -f <CAPTURE_FILENAME>
+}}}
+Here `<CAPTURE_FILENAME>` is the prefix for files to which the capture is written. Use {{{sudo}}} is applicable.
 
  * Step 1: Set your card to monitor mode. This step is not required, if your card is already in monitor mode.
 {{{
