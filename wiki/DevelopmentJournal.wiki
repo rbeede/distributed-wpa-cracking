@@ -8,6 +8,10 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+= 2011-03-09 22:18 - Arpit Sud - Data Capture script   =
+
+Uploaded script for data capture to SVN.
+
 = 2011-03-09 15:26 - Arpit Sud - How to Capture Data   =
 
 Created the Wiki page HowtoCaptureData.
