@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<!-- http://wiki.apache.org/logging-log4j/Log4jXmlFormat -->
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<!-- The appender name "rolling" is referenced in Java code to display the absolute path of where logging is occuring -->
+	<appender name="rolling" class="org.apache.log4j.rolling.RollingFileAppender">
+	
+		<!-- The active file to log to -->
+		<param name="file" value="${catalina.home}/logs/WebApp.log" />
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+
+		<rollingPolicy class="org.apache.log4j.rolling.TimeBasedRollingPolicy">
+			<!-- The file to roll to, this is a fairly intelligent parameter, if the file ends in .gz, it gzips it,
+					based on the date stamp it rolls at that time, default is yyyy-MM-dd, (rolls at midnight)
+  					See: http://logging.apache.org/log4j/companions/extras/apidocs/org/apache/log4j/rolling/TimeBasedRollingPolicy.html -->
+			<param name="FileNamePattern" value="${catalina.home}/logs/WebApp.%d.log.gz" />
+		</rollingPolicy>
+
+		<layout class="org.apache.log4j.PatternLayout">
+			<!-- %d = date,	%p = level,	%t = thread,	%c = category (usually class),	%m = message,	%n = newline -->
+			<param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS Z}\t%-5p\tThread=%t\t%c\t%m%n" />
+		</layout>
+	</appender>
+	
+	<appender name="Ganymede" class="org.apache.log4j.net.SocketAppender">
+		<param name="remoteHost" value="localhost"/>
+		<param name="port" value="4445"/>
+		<param name="locationInfo" value="true"/>
+	</appender>
+
+	<root>
+		<priority value="debug" />
+		<appender-ref ref="rolling" />
+		<appender-ref ref="Ganymede"/>
+	</root>
+
+</log4j:configuration>

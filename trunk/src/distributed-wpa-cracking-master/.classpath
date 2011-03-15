@@ -1,0 +1,24 @@
+<classpath>
+  <classpathentry kind="src" path="src/main/java" including="**/*.java"/>
+  <classpathentry kind="src" path="src/main/resources" excluding="**/*.java"/>
+  <classpathentry kind="output" path="target/classes"/>
+  <classpathentry kind="var" path="M2_REPO/javax/servlet/jsp/jsp-api/2.2/jsp-api-2.2.jar" sourcepath="M2_REPO/javax/servlet/jsp/jsp-api/2.2/jsp-api-2.2-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/C:/Users/rbeede/.m2/repository/javax/servlet/jsp/jsp-api/2.2/jsp-api-2.2-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="var" path="M2_REPO/javax/servlet/jstl/1.2/jstl-1.2.jar" sourcepath="M2_REPO/javax/servlet/jstl/1.2/jstl-1.2-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/log4j/apache-log4j-extras/1.0/apache-log4j-extras-1.0.jar" sourcepath="M2_REPO/log4j/apache-log4j-extras/1.0/apache-log4j-extras-1.0-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/C:/Users/rbeede/.m2/repository/log4j/apache-log4j-extras/1.0/apache-log4j-extras-1.0-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="var" path="M2_REPO/org/glassfish/javax.servlet/3.0/javax.servlet-3.0.jar" sourcepath="M2_REPO/org/glassfish/javax.servlet/3.0/javax.servlet-3.0-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/jcraft/jsch/0.1.44/jsch-0.1.44.jar" sourcepath="M2_REPO/com/jcraft/jsch/0.1.44/jsch-0.1.44-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.16/log4j-1.2.16.jar" sourcepath="M2_REPO/log4j/log4j/1.2.16/log4j-1.2.16-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/C:/Users/rbeede/.m2/repository/log4j/log4j/1.2.16/log4j-1.2.16-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+</classpath>
