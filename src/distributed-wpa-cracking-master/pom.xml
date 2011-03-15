@@ -1,0 +1,158 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.google.code.distributed-wpa-cracking.master</groupId>
+	<artifactId>distributed-wpa-cracking-master</artifactId>
+	<packaging>war</packaging>
+	<version>SNAPSHOT</version>
+	<name>distributed-wpa-cracking-master Maven Webapp</name>
+	<url>http://code.google.com/p/distributed-wpa-cracking/</url>
+	<inceptionYear>2011</inceptionYear>
+	<licenses>
+		<license>
+			<name>GNU GENERAL PUBLIC LICENSE</name>
+			<url>http://www.gnu.org/licenses/gpl-3.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007</comments>
+		</license>
+	</licenses>
+	<organization>
+		<name>University of Colorado at Boulder, CSCI5673 - Distributed Systems, Spring 2011, Distributed WPA Cracking group project</name>
+		<url>http://code.google.com/p/distributed-wpa-cracking/</url>
+	</organization>
+	<developers>
+		<developer>
+			<id>rbeede</id>
+			<name>Rodney Beede</name>
+			<email>nospam_see_project_website@127.0.0.1</email>
+			<url>http://www.rodneybeede.com/</url>
+			<organization>University of Colorado</organization>
+			<organizationUrl>http://www.colorado.edu/</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+				<role>tester</role>
+			</roles>
+			<timezone>-7</timezone>
+		</developer>
+		<developer>
+			<id>rrkroiss</id>
+			<name>Ryan Kroiss</name>
+			<email>nospam_see_project_website@127.0.0.1</email>
+			<url></url>
+			<organization>University of Colorado</organization>
+			<organizationUrl>http://www.colorado.edu/</organizationUrl>
+			<roles>
+				<role>developer</role>
+				<role>tester</role>
+			</roles>
+			<timezone>-7</timezone>
+		</developer>
+		<developer>
+			<id>arpitsud</id>
+			<name>Arpit Sud</name>
+			<email>nospam_see_project_website@127.0.0.1</email>
+			<url></url>
+			<organization>University of Colorado</organization>
+			<organizationUrl>http://www.colorado.edu/</organizationUrl>
+			<roles>
+				<role>developer</role>
+				<role>tester</role>
+			</roles>
+			<timezone>-7</timezone>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>Richard Han</name>
+			<email>nospam_see_project_website@127.0.0.1</email>
+			<url>http://www.cs.colorado.edu/~rhan/</url>
+			<organization>University of Colorado, Computer Science department</organization>
+			<organizationUrl>http://www.cs.colorado.edu/</organizationUrl>
+			<roles>
+				<role>professor</role>
+			</roles>
+			<timezone>-7</timezone>
+		</contributor>
+	</contributors>
+	<dependencies>
+		<dependency>
+			<groupId>com.jcraft</groupId>
+			<artifactId>jsch</artifactId>
+			<version>0.1.44</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.16</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>apache-log4j-extras</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<!-- Maven Central didn't provide this but should work regardless of web app container, beats waiting on Maven Central to catch up -->
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.servlet</artifactId>
+			<version>3.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet.jsp</groupId>
+			<artifactId>jsp-api</artifactId>
+			<version>2.2</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.2</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<finalName>distributed-wpa-cracking-master</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<configuration>
+					<downloadSources>true</downloadSources>
+					<downloadJavadocs>true</downloadJavadocs>
+					<wtpversion>2.0</wtpversion>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<!-- Because Maven Central repository is slow at getting the latest JSP 
+			servlet, jstl, and other apis -->
+		<repository>
+			<id>javaNetGlassfish</id>
+			<name>java.net Glassfish Maven Repository</name>
+			<url>http://download.java.net/maven/glassfish/</url>
+			<layout>default</layout>
+		</repository>
+		<repository>
+			<id>javaNet2</id>
+			<name>java.net Maven 2 Repository</name>
+			<url>http://download.java.net/maven/2/</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
+
+	<scm>
+		<connection>scm:svn:https://distributed-wpa-cracking.googlecode.com/svn</connection>
+		<developerConnection>scm:svn:https://distributed-wpa-cracking.googlecode.com/svn</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://distributed-wpa-cracking.googlecode.com/svn</url>
+	</scm>
+</project>
