@@ -73,12 +73,17 @@ So the first text field indicates the tcp packet type.  START (case sensitive) m
 3rd field is the complete pathname to the wifi capture file.  The master will specify a path that is on the NFS share which will already be available to the worker nodes just like a local file would be.
 
 So the worker node gets the following as startup command line parameters:
+
     --cluster-rainbow-table /localdata/path/dir/with/sids/files/      (seeing this puts cowpatty into the special loading mode)
+
 	--cluster-port 54321
+
 	--cluster-output /home/nfs_share/jobresults/basedir/	(Take jobidF3234 and append to end as another directory.  Create directory if needed. Overwrite any existing files.)
+
 	--cluster-node-count 8	(number of worker nodes total)
+
 	--cluster-node-rank 1-n	(this nodes rank)
-	
+
 
 Each worker node should log to a file in the /home/nfs_share/jobresults/basedir/jobidF3234/ directory:
 	hostname_of_worker_node_jobidF3234.log		(flush output right away to log too)
