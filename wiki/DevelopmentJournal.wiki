@@ -8,6 +8,11 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+
+= 2011-03-10 15:56 - Rodney Beede - Coding on master node =
+
+Working on the code for the master node today.  Hope to have it usable by this evening and running.
+
 = 2011-03-10 15:56 - Ryan Kroiss - Added server code to repo =
 
 Added the server code to the source code repository.  It's just a skeleton of what
