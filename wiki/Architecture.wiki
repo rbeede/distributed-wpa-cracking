@@ -74,11 +74,13 @@ Each line in the log file should have a timestamp.  I like the format  yyyy-mm-d
 
 Querying job status
 
-Packet looks like:  STATUS\0\31jobidF3234\0\31\4
+Packet looks like:  STATUS\0\31\4
 
 Worker node returns one of:
 	STATUS\0\31LOADED\0\31\4							(just started up and have already loaded rainbow table into memory, ready for query)
+
 	STATUS\0\31RUNNING\0\31jobidF3234\0\31\4			(currently running job with given id)
+
 	STATUS\0\31FINISHED\0\31jobidF3234\0\31\4			(last job finished was jobidF3224, ready for next query, only remembers last one finished)
 	
 	
@@ -99,4 +101,5 @@ ERROR\0\31Error Message text goes here\0\31\4
 
 Example text messages:
 	Node is already busy with another job of id XYZ
+
 	Could not kill non-running job with id XYZ
