@@ -48,4 +48,74 @@ is necessary.
 
 = Master Node =
 
-Maybe a Java Web Service or app.  Possibly WSDL or REST interface or maybe just plain HTTP POST
+Java web application that will handle job submission and queue.  It will also be responsible for starting the worker nodes via ssh per a pre-defined configuration.
+
+
+= Master to Worker Node Communication =
+
+The master will send a tcp packet.  The master will be responsible for queuing jobs.  The TCP connection is keepalive, but if it goes down it would be nice to be able to re-establish.
+
+Contents will be:
+
+START\0\31jobidF3234\0\31/var/length/path/to/wifi.pcap\0\31\4
+
+Where \0 is the null character indicating the end of a string (8-bit chars)
+\31 means US or the ASCII Unit Separator which indicates the end of a text field value.
+\4 means ASCII End of Transmission which is a field to signal when the data is done.
+
+Assume an individual string field length limit of 1024 bytes including the null termination char.
+Assume a maximum packet size of 4096 bytes.
+
+So the first text field indicates the tcp packet type.  START (case sensitive) means start a new job.  If a job is already running on a node return an error as defined below.  Otherwise it returns:  SUCCESS_START\0\31jobidF32234\0\31\4
+
+2nd field is the job id the master wants.  It could be any string of valid file path characters.  It will probably be more like jobid + epoch timestamp.
+
+3rd field is the complete pathname to the wifi capture file.  The master will specify a path that is on the NFS share which will already be available to the worker nodes just like a local file would be.
+
+So the worker node gets the following as startup command line parameters:
+    --cluster-rainbow-table /localdata/path/dir/with/sids/files/      (seeing this puts cowpatty into the special loading mode)
+	--cluster-port 54321
+	--cluster-output /home/nfs_share/jobresults/basedir/	(Take jobidF3234 and append to end as another directory.  Create directory if needed. Overwrite any existing files.)
+	--cluster-node-count 8	(number of worker nodes total)
+	--cluster-node-rank 1-n	(this nodes rank)
+	
+
+Each worker node should log to a file in the /home/nfs_share/jobresults/basedir/jobidF3234/ directory:
+	hostname_of_worker_node_jobidF3234.log		(flush output right away to log too)
+
+The worker node that finds the solution should also save a file in the output directory with the solution.  Call it SOLUTION
+	The log file should also note that the worker found the solution.
+	The master will know the path to find the SOLUTION file.
+	
+Each line in the log file should have a timestamp.  I like the format  yyyy-mm-dd hh:mm:ss.mili timezone
+
+
+
+Querying job status
+
+Packet looks like:  STATUS\0\31jobidF3234\0\31\4
+
+Worker node returns one of:
+	STATUS\0\31LOADED\0\31\4							(just started up and have already loaded rainbow table into memory, ready for query)
+	STATUS\0\31RUNNING\0\31jobidF3234\0\31\4			(currently running job with given id)
+	STATUS\0\31FINISHED\0\31jobidF3234\0\31\4			(last job finished was jobidF3224, ready for next query, only remembers last one finished)
+	
+	
+Killing job on nodes
+
+Suppose user wants to cancel a running job or one of the worker nodes found the solution.  The other worker nodes need to be told to stop trying.
+
+KILLJOB\0\31jobidF32234\0\31\4
+
+Response will either be error if that job wasn't in the running state or the following success message:  SUCCESS_KILL\0\31jobidF32234\0\31\4
+
+
+
+ERRORS:
+
+
+ERROR\0\31Error Message text goes here\0\31\4
+
+Example text messages:
+	Node is already busy with another job of id XYZ
+	Could not kill non-running job with id XYZ
