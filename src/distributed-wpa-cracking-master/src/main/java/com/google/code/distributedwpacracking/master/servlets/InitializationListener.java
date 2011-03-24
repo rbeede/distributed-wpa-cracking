@@ -25,6 +25,8 @@ public class InitializationListener implements ServletContextListener {
 		
 		log.debug("Application is starting");
 		
+		log.info("Current working directory is " + System.getProperty("user.dir"));
+		
 		final File configFile = new File(sce.getServletContext().getInitParameter("WebAppConfig.xml Full Pathname"));
 		log.info("Using configuration at " + configFile.getAbsolutePath());
 		

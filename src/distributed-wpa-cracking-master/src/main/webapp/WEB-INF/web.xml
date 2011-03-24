@@ -10,7 +10,7 @@
 		the web.xml because it makes redeployment easier to avoid having to update web.xml for each environment.
 		</description>
 		<param-name>WebAppConfig.xml Full Pathname</param-name>
-		<param-value>s:/Software/configs/WebAppConfig.xml</param-value>
+		<param-value>/Software/configs/WebAppConfig.xml</param-value>
 	</context-param>
 
 	<listener>
@@ -29,8 +29,24 @@
 		<servlet-name>JobSubmit</servlet-name>
 		<url-pattern>/servlets/JobSubmit</url-pattern>
 	</servlet-mapping>
-
-
+	<servlet>
+		<servlet-name>StartWorkerNodes</servlet-name>
+		<servlet-class>com.google.code.distributedwpacracking.master.servlets.StartWorkerNodes</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>StartWorkerNodes</servlet-name>
+		<url-pattern>/servlets/StartWorkerNodes</url-pattern>
+	</servlet-mapping>
+	<servlet>
+		<servlet-name>KillWorkerNodes</servlet-name>
+		<servlet-class>com.google.code.distributedwpacracking.master.servlets.KillWorkerNodes</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>KillWorkerNodes</servlet-name>
+		<url-pattern>/servlets/KillWorkerNodes</url-pattern>
+	</servlet-mapping>
+	
+	
 	<welcome-file-list>
 		<welcome-file>welcome.jspx</welcome-file>
 	</welcome-file-list>

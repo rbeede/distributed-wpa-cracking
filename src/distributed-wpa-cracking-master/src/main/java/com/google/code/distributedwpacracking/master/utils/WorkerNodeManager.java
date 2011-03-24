@@ -22,21 +22,21 @@ public class WorkerNodeManager {
 	private static final int SOCKET_CONNECT_TIMEOUT_MILLISECONDS = 800;
 	private static final int SOCKET_IO_TIMEOUT_MILLISECONDS = SOCKET_CONNECT_TIMEOUT_MILLISECONDS * 3;
 	
-	private final String[] hostnamesAndPorts;
+	private final InetSocketAddress[] addresses;
 	
-	public WorkerNodeManager(final String[] hostnamesAndPorts) {
-		this.hostnamesAndPorts = hostnamesAndPorts;
+	public WorkerNodeManager(final InetSocketAddress[] addresses) {
+		this.addresses = addresses;
 	}
 	
 	public String[] getWorkerNodeStatus() {
-		final String[] statusReports = new String[this.hostnamesAndPorts.length];
+		final String[] statusReports = new String[this.addresses.length];
 		
-		for(int i = 0; i < this.hostnamesAndPorts.length; i++) {
-			final String hostnameAndPort = this.hostnamesAndPorts[i];
+		for(int i = 0; i < this.addresses.length; i++) {
+			final InetSocketAddress address = this.addresses[i];
 			
-			final String[] responseParts = queryStatus(hostnameAndPort);
+			final String[] responseParts = queryStatus(address);
 			
-			statusReports[i] = hostnameAndPort;
+			statusReports[i] = address.toString();
 			statusReports[i] += " ";
 			statusReports[i] += StringUtils.join(" ", responseParts);
 		}
@@ -46,26 +46,26 @@ public class WorkerNodeManager {
 	
 	
 	public String[] submitJob(final Job job) {
-		final String[] statusReports = new String[this.hostnamesAndPorts.length];
+		final String[] statusReports = new String[this.addresses.length];
 		
 		
 		final File jobDir = new File(WebAppConfig.getInstance().getJobOutputDirectory(), job.getId());
 		final File captureFile = new File(jobDir, "WIRELESS_CAPTURE");
 		
-		for(int i = 0; i < this.hostnamesAndPorts.length; i++) {
-			final String hostnameAndPort = this.hostnamesAndPorts[i];
+		for(int i = 0; i < this.addresses.length; i++) {
+			final InetSocketAddress address = this.addresses[i];
 			
 			final String[] responseParts;
 			try {
-				responseParts = commWorker(hostnameAndPort, "START", job.getId(), captureFile.getAbsolutePath(), jobDir.getAbsolutePath());
+				responseParts = commWorker(address, "START", job.getId(), captureFile.getAbsolutePath(), jobDir.getAbsolutePath());
 			} catch(final IOException e) {
 				final String errMsg = "Job id of " + job.getId() + " failed to submit to worker node with error " + e.getMessage();
 				log.error(errMsg, e);
-				statusReports[i] = hostnameAndPort + " ERROR " + errMsg;
+				statusReports[i] = address + " ERROR " + errMsg;
 				continue;
 			}
 			
-			statusReports[i] = hostnameAndPort;
+			statusReports[i] = address.toString();
 			statusReports[i] += " ";
 			statusReports[i] += StringUtils.join(" ", responseParts);
 		}
@@ -85,23 +85,23 @@ public class WorkerNodeManager {
 	 * @return
 	 */
 	public String[] killJob(final Job job) {
-		final String[] statusReports = new String[this.hostnamesAndPorts.length];
+		final String[] statusReports = new String[this.addresses.length];
 		
 		
-		for(int i = 0; i < this.hostnamesAndPorts.length; i++) {
-			final String hostnameAndPort = this.hostnamesAndPorts[i];
+		for(int i = 0; i < this.addresses.length; i++) {
+			final InetSocketAddress address = this.addresses[i];
 			
 			final String[] responseParts;
 			try {
-				responseParts = commWorker(hostnameAndPort, "KILLJOB", job.getId());
+				responseParts = commWorker(address, "KILLJOB", job.getId());
 			} catch(final IOException e) {
 				final String errMsg = "Job id of " + job.getId() + " failed to submit to worker node with error " + e.getMessage();
 				log.error(errMsg, e);
-				statusReports[i] = hostnameAndPort + " ERROR " + errMsg;
+				statusReports[i] = address.toString() + " ERROR " + errMsg;
 				continue;
 			}
 			
-			statusReports[i] = hostnameAndPort;
+			statusReports[i] = address.toString();
 			statusReports[i] += " ";
 			statusReports[i] += StringUtils.join(" ", responseParts);
 		}
@@ -113,8 +113,8 @@ public class WorkerNodeManager {
 	//TODO cancel job
 	
 	
-	private String[] commWorker(final String hostnameAndPort, final String... requestParts) throws IOException {
-		log.trace(hostnameAndPort + "\t" + StringUtils.join(" ", requestParts));
+	private String[] commWorker(final InetSocketAddress address, final String... requestParts) throws IOException {
+		log.trace(address.toString() + "\t" + StringUtils.join(" ", requestParts));
 		
 		final Socket socket = new Socket();
 		
@@ -125,8 +125,7 @@ public class WorkerNodeManager {
 			throw e;
 		}
 		
-		final String hostname = hostnameAndPort.substring(0, hostnameAndPort.lastIndexOf(':'));
-		final int port = Integer.parseInt(hostnameAndPort.substring(hostnameAndPort.lastIndexOf(':')+1));
+
 		
 		
 		// Size check
@@ -149,7 +148,7 @@ public class WorkerNodeManager {
 		}
 		
 		
-		socket.connect(new InetSocketAddress(hostname,port), SOCKET_CONNECT_TIMEOUT_MILLISECONDS);
+		socket.connect(address, SOCKET_CONNECT_TIMEOUT_MILLISECONDS);
 
 		final OutputStream os = socket.getOutputStream();
 		
@@ -210,9 +209,9 @@ public class WorkerNodeManager {
 	}
 	
 	
-	private String[] queryStatus(final String hostnameAndPort) {
+	private String[] queryStatus(final InetSocketAddress address) {
 		try {
-			return commWorker(hostnameAndPort, "STATUS");
+			return commWorker(address, "STATUS");
 		} catch (final IOException e) {
 			log.trace(e,e);
 			return new String[] {"NOT LOADED", e.toString()};

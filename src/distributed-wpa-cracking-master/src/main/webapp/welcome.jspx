@@ -77,8 +77,8 @@
 			<td>
 				<iframe src="${pageContext.request.contextPath}/system_status.jspx" style="width: 800px; height: 300px;" />
 				
-				<p><a href="${pageContext.request.contextPath}">Start Worker Nodes</a></p>
-				<p><a href="${pageContext.request.contextPath}">Kill Worker Nodes</a></p>
+				<p><a href="${pageContext.request.contextPath}/servlets/StartWorkerNodes">Start Worker Nodes</a></p>
+				<p><a href="${pageContext.request.contextPath}/servlets/KillWorkerNodes">Kill Worker Nodes</a></p>
 			</td>
 		</tr>
 	</table>
