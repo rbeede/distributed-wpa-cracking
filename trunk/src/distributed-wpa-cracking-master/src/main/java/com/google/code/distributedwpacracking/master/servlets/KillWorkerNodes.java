@@ -67,10 +67,11 @@ public class KillWorkerNodes extends HttpServlet {
 				
 				// Might have tried to kill something that wasn't running anyway
 				sbResponseText.append(address.toString());
+				sbResponseText.append("\t");
 				sbResponseText.append(cmdOutput[0]);
 				sbResponseText.append(cmdOutput[1]);
 				sbResponseText.append(cmdOutput[2]);
-				sbResponseText.append("\n\t");
+				sbResponseText.append("\t|\t");
 			} else {
 				log.info(address.toString() + " ran kill command with success");
 			}
