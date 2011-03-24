@@ -4,13 +4,16 @@
 	xmlns:fmt="http://java.sun.com/jsp/jstl/fmt"
 	>
 	
-	<!-- We don't support Internet Explorer 8 and before.  IE9 might support XHTML properly
-		If not the user muse use a web browser that does have support for basic web standards
+	<!-- We don't support Internet Explorer 8 and before.  IE9 might support XHTML properly.
+		If not the user must use a web browser that does have support for basic web standards.
 		Google Chrome or Mozilla Firefox are good choices.
 	 -->
+	 
+	<jsp:useBean id="GlobalData" class="com.google.code.distributedwpacracking.master.javabeans.GlobalDataJavaBean" />
 	
     <jsp:directive.page language="java"
         contentType="application/xhtml+xml; charset=UTF-8" pageEncoding="UTF-8" />
+        
     <jsp:text><![CDATA[<?xml version="1.0" encoding="UTF-8" ?>]]></jsp:text>
     
     <jsp:text><![CDATA[<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">]]></jsp:text>
@@ -28,13 +31,14 @@
 	<style type="text/css">
 		table, td, th {
 			border: 1px solid black;
+			vertical-align: top;
 		}
 	</style>
   </head>
   <body>
-	<c:if test="${not empty sessionScope.statusMessage}">
-		<div style="width: 50%; margin-right: auto; margin-left: auto; border: 1px solid #359545; background-color: #DFF2BF; text-align: center; color: #4F8A10"><c:out value="${sessionScope.statusMessage}" /></div>
-		<c:set var="statusMessage" scope="session" />  <!-- Clear out the message -->
+	<c:if test="${not empty sessionScope.StatusMessage}">
+		<div style="width: 50%; margin-right: auto; margin-left: auto; border: 1px solid #359545; background-color: #DFF2BF; text-align: center; color: #4F8A10"><c:out value="${sessionScope.StatusMessage}" /></div>
+		<c:set var="StatusMessage" scope="session" />  <!-- Clear out the message -->
 	</c:if>
   
 	<table>
@@ -45,18 +49,36 @@
 		</tr>
 		<tr>
 			<td>
-				<form method="POST" action="/servlets/TODO">
-					<label for="wirelessCaptureFile">Wireless Capture File:</label> <input type="file" name="wirelessCaptureFile" /><br />
-					<label for="sid">SID:</label> <input type="text" name="sid" /><br />
+				<form method="POST" enctype="multipart/form-data" action="${pageContext.request.contextPath}/servlets/JobSubmit">
+					<label for="wireless_capture_file">Wireless Capture File:</label> <input type="file" name="wireless_capture_file" /><br />
+					<label for="ssid">SSID:</label> <input type="text" name="ssid" /><br />
 					<input type="submit" />
 				</form>
 			</td>
 			<td>
-				<jsp:include page="/job queue _fragment.jspx" />
+				<table>
+					<tr>
+						<th>Owner</th><th>Job ID</th><th>SSID</th><th>Current State</th><th>Time Submitted</th><th>Time Started</th><th>Time Completed</th><th>Result</th>
+					</tr>
+					<c:forEach items="${GlobalData.instance.jobs}" var="job">
+						<tr>
+							<td><c:out value="${job.owner}" /></td>
+							<td><c:out value="${job.id}" /></td>
+							<td><c:out value="${job.ssid}" /></td>
+							<td><c:out value="${job.state}" /></td>
+							<td><c:out value="${job.submissionTime.time}" /></td>
+							<td><c:out value="${job.startTime.time}" /></td>
+							<td><c:out value="${job.endTime.time}" /></td>
+							<td><c:out value="${job.result}" /></td>
+						</tr>
+					</c:forEach>
+				</table>
 			</td>
 			<td>
-				TODO<br />
-				<a href="">Start Worker Nodes</a>
+				<iframe src="${pageContext.request.contextPath}/system_status.jspx" style="width: 800px; height: 300px;" />
+				
+				<p><a href="${pageContext.request.contextPath}">Start Worker Nodes</a></p>
+				<p><a href="${pageContext.request.contextPath}">Kill Worker Nodes</a></p>
 			</td>
 		</tr>
 	</table>

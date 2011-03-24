@@ -1,0 +1,43 @@
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.2"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+	xmlns:fmt="http://java.sun.com/jsp/jstl/fmt"
+	>
+	
+	<!-- We don't support Internet Explorer 8 and before.  IE9 might support XHTML properly.
+		If not the user must use a web browser that does have support for basic web standards.
+		Google Chrome or Mozilla Firefox are good choices.
+	 -->
+	 
+	<jsp:useBean id="GlobalData" class="com.google.code.distributedwpacracking.master.javabeans.GlobalDataJavaBean" />
+	
+    <jsp:directive.page language="java"
+        contentType="application/xhtml+xml; charset=UTF-8" pageEncoding="UTF-8" />
+        
+    <jsp:text><![CDATA[<?xml version="1.0" encoding="UTF-8" ?>]]></jsp:text>
+    
+    <jsp:text><![CDATA[<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">]]></jsp:text>
+    
+<html version="-//W3C//DTD XHTML 1.1//EN"
+      xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.w3.org/1999/xhtml
+                          http://www.w3.org/MarkUp/SCHEMA/xhtml11.xsd"
+	>
+  <head>
+	<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+	<title><c:out value="${pageContext.servletContext.servletContextName}" /></title>
+	
+	<style type="text/css">
+		table, td, th {
+			border: 1px solid black;
+		}
+	</style>
+  </head>
+  <body>
+  
+  <c:forEach items="${GlobalData.instance.workerNodeManager.workerNodeStatus}" var="workerNodeStatus"><c:out value="${workerNodeStatus}" /><br /></c:forEach>
+  
+  </body>
+  </html>
+  </jsp:root>

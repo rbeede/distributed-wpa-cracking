@@ -1,0 +1,221 @@
+package com.google.code.distributedwpacracking.master.utils;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.apache.log4j.Logger;
+
+import com.google.code.distributedwpacracking.master.GlobalConstants;
+import com.google.code.distributedwpacracking.master.Job;
+import com.google.code.distributedwpacracking.master.WebAppConfig;
+
+public class WorkerNodeManager {
+	private static final Logger log = Logger.getLogger(WorkerNodeManager.class);
+	
+	private static final int SOCKET_CONNECT_TIMEOUT_MILLISECONDS = 800;
+	private static final int SOCKET_IO_TIMEOUT_MILLISECONDS = SOCKET_CONNECT_TIMEOUT_MILLISECONDS * 3;
+	
+	private final String[] hostnamesAndPorts;
+	
+	public WorkerNodeManager(final String[] hostnamesAndPorts) {
+		this.hostnamesAndPorts = hostnamesAndPorts;
+	}
+	
+	public String[] getWorkerNodeStatus() {
+		final String[] statusReports = new String[this.hostnamesAndPorts.length];
+		
+		for(int i = 0; i < this.hostnamesAndPorts.length; i++) {
+			final String hostnameAndPort = this.hostnamesAndPorts[i];
+			
+			final String[] responseParts = queryStatus(hostnameAndPort);
+			
+			statusReports[i] = hostnameAndPort;
+			statusReports[i] += " ";
+			statusReports[i] += StringUtils.join(" ", responseParts);
+		}
+		
+		return statusReports;
+	}
+	
+	
+	public String[] submitJob(final Job job) {
+		final String[] statusReports = new String[this.hostnamesAndPorts.length];
+		
+		
+		final File jobDir = new File(WebAppConfig.getInstance().getJobOutputDirectory(), job.getId());
+		final File captureFile = new File(jobDir, "WIRELESS_CAPTURE");
+		
+		for(int i = 0; i < this.hostnamesAndPorts.length; i++) {
+			final String hostnameAndPort = this.hostnamesAndPorts[i];
+			
+			final String[] responseParts;
+			try {
+				responseParts = commWorker(hostnameAndPort, "START", job.getId(), captureFile.getAbsolutePath(), jobDir.getAbsolutePath());
+			} catch(final IOException e) {
+				final String errMsg = "Job id of " + job.getId() + " failed to submit to worker node with error " + e.getMessage();
+				log.error(errMsg, e);
+				statusReports[i] = hostnameAndPort + " ERROR " + errMsg;
+				continue;
+			}
+			
+			statusReports[i] = hostnameAndPort;
+			statusReports[i] += " ";
+			statusReports[i] += StringUtils.join(" ", responseParts);
+		}
+		
+		return statusReports;
+	}
+	
+	
+	/**
+	 * May attempt to kill job that reached FINISHED on worker node.  Worker node will ignore this and just return an error.
+	 * 
+	 * We don't really care about the error all that much.  We just log the returned status code for debugging.
+	 * 
+	 * It is really a blind kill signal without verification that worker nodes went back to ready state.
+	 * 
+	 * @param job
+	 * @return
+	 */
+	public String[] killJob(final Job job) {
+		final String[] statusReports = new String[this.hostnamesAndPorts.length];
+		
+		
+		for(int i = 0; i < this.hostnamesAndPorts.length; i++) {
+			final String hostnameAndPort = this.hostnamesAndPorts[i];
+			
+			final String[] responseParts;
+			try {
+				responseParts = commWorker(hostnameAndPort, "KILLJOB", job.getId());
+			} catch(final IOException e) {
+				final String errMsg = "Job id of " + job.getId() + " failed to submit to worker node with error " + e.getMessage();
+				log.error(errMsg, e);
+				statusReports[i] = hostnameAndPort + " ERROR " + errMsg;
+				continue;
+			}
+			
+			statusReports[i] = hostnameAndPort;
+			statusReports[i] += " ";
+			statusReports[i] += StringUtils.join(" ", responseParts);
+		}
+		
+		return statusReports;
+	}
+	
+	
+	//TODO cancel job
+	
+	
+	private String[] commWorker(final String hostnameAndPort, final String... requestParts) throws IOException {
+		log.trace(hostnameAndPort + "\t" + StringUtils.join(" ", requestParts));
+		
+		final Socket socket = new Socket();
+		
+		try {
+			socket.setSoTimeout(SOCKET_IO_TIMEOUT_MILLISECONDS);
+		} catch (final SocketException e) {
+			log.fatal(e,e);  // OS problem
+			throw e;
+		}
+		
+		final String hostname = hostnameAndPort.substring(0, hostnameAndPort.lastIndexOf(':'));
+		final int port = Integer.parseInt(hostnameAndPort.substring(hostnameAndPort.lastIndexOf(':')+1));
+		
+		
+		// Size check
+		int packetByteCount = 0;
+		for(final String requestPart : requestParts) {
+			if(requestPart.length() > GlobalConstants.TEXT_FIELD_CHAR_MAX_LENGTH) {
+				final String errMsg = "Request part has length " + requestPart.length() + " which exceeds " + GlobalConstants.TEXT_FIELD_CHAR_MAX_LENGTH;
+				log.fatal(errMsg);
+				throw new IOException(errMsg);
+			}
+			
+			packetByteCount += requestPart.length() + 1;  // +1 for the null char
+			packetByteCount += 1;  // Unit Separator
+		}
+		packetByteCount++;  // End of Transmission
+		if(packetByteCount > GlobalConstants.PACKET_MAX_LENGTH) {
+			final String errMsg = "Packet has length " + packetByteCount + " which exceeds " + GlobalConstants.PACKET_MAX_LENGTH;
+			log.fatal(errMsg);
+			throw new IOException(errMsg);
+		}
+		
+		
+		socket.connect(new InetSocketAddress(hostname,port), SOCKET_CONNECT_TIMEOUT_MILLISECONDS);
+
+		final OutputStream os = socket.getOutputStream();
+		
+		for(final String requestPart : requestParts) {
+			os.write(requestPart.getBytes("UTF-8"));
+			os.write(0);  // null terminator
+			os.write(31);  // US ASCII Unit Separator
+		}
+		os.write(4);  // US ASCII End of Transmission
+		
+		os.close();
+		socket.shutdownOutput();
+		
+		
+		// Read the response
+		final InputStream is = socket.getInputStream();
+		
+		final byte[] buffer = new byte[GlobalConstants.PACKET_MAX_LENGTH];
+		int bufferBytesRead = 0;
+		int totalBytesRead = 0;
+		while(-1 != (bufferBytesRead = is.read(buffer, totalBytesRead, buffer.length - totalBytesRead))) {
+			totalBytesRead += bufferBytesRead;
+			
+			if(buffer.length == totalBytesRead) {
+				break;  // Read maximum possible so may be invalid
+			}
+		}
+		
+		is.close();
+		socket.close();
+		
+		
+		final Collection<String> responseParts = new ArrayList<String>();
+		int offset = 0;
+		for(int i = 0; i < buffer.length; i++) {
+			if('\31' == buffer[i]) {
+				// part should include '\0' from buffer, but it buffer is incorrect Java still handles the string termination
+				final String part = new String(buffer, offset, i - offset, "UTF-8");
+				
+				responseParts.add(part);
+				
+				offset = i + 1;
+			} else if('\4' == buffer[i]) {
+				offset = i;  // so we can check later
+				break;
+			}
+		}
+		
+		// Sanity check on packet well-formedness
+		if(offset >= buffer.length || '\4' != buffer[offset]) {
+			// Packet didn't have End of Transmission in it so invalid or remote responded with packet too long
+			final IOException excep = new IOException("Packet did not contain EoT marker!  offset reached was " + offset);
+			log.error(excep,excep);
+			throw excep;
+		}
+		
+		return responseParts.toArray(new String[responseParts.size()]);
+	}
+	
+	
+	private String[] queryStatus(final String hostnameAndPort) {
+		try {
+			return commWorker(hostnameAndPort, "STATUS");
+		} catch (final IOException e) {
+			log.trace(e,e);
+			return new String[] {"NOT LOADED", e.toString()};
+		}
+	}
+}

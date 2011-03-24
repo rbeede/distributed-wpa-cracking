@@ -7,22 +7,27 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 
-public class WebAppConfig {
-	private static final WebAppConfig _instance = new WebAppConfig();
+import com.google.code.distributedwpacracking.master.utils.StringUtils;
+
+/**
+ * @author Rodney Beede
+ * 
+ * Singleton using the enum method which also provides serialization and protects against reflection
+ * See http://stackoverflow.com/questions/70689/efficient-way-to-implement-singleton-pattern-in-java
+ * 
+ * Access with WebAppConfig.INSTANCE or the traditional WebAppConfig.getInstance()
+ *
+ */
+public enum WebAppConfig {
+	INSTANCE;
 	
 	private static final Logger log = Logger.getLogger(WebAppConfig.class);
 	
 	private final Properties configProperties = new Properties();
 	
-	private WebAppConfig() {
-	}
 	
 	public static WebAppConfig getInstance() {
-		return _instance;
-	}
-	
-	public Object clone() throws CloneNotSupportedException {
-		throw new CloneNotSupportedException(); 
+		return WebAppConfig.INSTANCE;
 	}
 	
 	/**
@@ -45,7 +50,35 @@ public class WebAppConfig {
 		log.debug("Config settings are now " + this.configProperties.toString());
 	}
 	
+	/**
+	 * Retrieves the value for any configuration property
+	 * 
+	 * @param name
+	 * @return
+	 */
 	public String get(final String name) {
 		return this.configProperties.getProperty(name);
+	}
+	
+	
+	public String[] getWorkerNodes() {
+		final String propValue = this.get("Worker Nodes");
+		
+		if(StringUtils.isEmpty(propValue)) {
+			return null;
+		} else {
+			return propValue.split(",");
+		}
+	}
+	
+	
+	public File getJobOutputDirectory() {
+		final String propValue = this.get("Job Output Directory"); 
+		
+		if(StringUtils.isEmpty(propValue)) {
+			return null;
+		} else {
+			return new File(propValue);
+		}
 	}
 }
