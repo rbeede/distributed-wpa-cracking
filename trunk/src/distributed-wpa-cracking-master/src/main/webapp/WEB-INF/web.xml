@@ -45,8 +45,24 @@
 		<servlet-name>KillWorkerNodes</servlet-name>
 		<url-pattern>/servlets/KillWorkerNodes</url-pattern>
 	</servlet-mapping>
-	
-	
+
+
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name>Entire Application</web-resource-name>
+			<url-pattern>/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>authuser</role-name>
+		</auth-constraint>
+	</security-constraint>
+	<!-- Define the Login Configuration for this Application -->
+	<login-config>
+		<auth-method>BASIC</auth-method>
+		<realm-name>Authorized Users Only Realm</realm-name>
+	</login-config>
+
+
 	<welcome-file-list>
 		<welcome-file>welcome.jspx</welcome-file>
 	</welcome-file-list>
