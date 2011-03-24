@@ -54,7 +54,7 @@ So the worker node gets the following as startup command line parameters:
 
 	--cluster-port 54321
 
-	--cluster-output /home/nfs_share/jobresults/basedir/	(Take jobidF3234 and append to end as another directory.  Create directory if needed. Overwrite any existing files.)
+	--cluster-log /home/nfs_share/hostname.log   (file where local node actions are logged that aren't specific to a job)
 
 	--cluster-node-count 8	(number of worker nodes total)
 
