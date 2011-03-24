@@ -34,6 +34,9 @@ public class StartWorkerNodes extends HttpServlet {
 		//FIXME Use threading to report back status via Callable so all ssh commands start at once
 		for(int i = 0; i < addresses.length; i++) {
 			final InetSocketAddress address = addresses[i];
+			
+			log.info("Send start node to " + address.getHostName());
+			
 			String startCmd = startCmdTemplate.replace("${NODE_PORT}", Integer.toString(address.getPort()));
 			startCmd = startCmd.replace("${NODES_COUNT}", Integer.toString(addresses.length));
 			startCmd = startCmd.replace("${NODE_RANK}", Integer.toString(i+1));

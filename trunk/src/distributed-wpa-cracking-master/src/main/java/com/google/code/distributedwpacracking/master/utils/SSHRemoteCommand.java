@@ -174,7 +174,11 @@ public class SSHRemoteCommand {
 			
 			int totalBytesRead = 0;	// just for this file
 			int bytesRead = -1;		// just for this file
-			while(-1 != (bytesRead = bis.read(buffer, offset, (int) file.length() - totalBytesRead))) {
+			while(totalBytesRead != file.length()) {
+				bytesRead = bis.read(buffer, offset, (int) file.length() - totalBytesRead);
+				
+				assert -1 != bytesRead;
+				
 				totalBytesRead += bytesRead;
 				offset += bytesRead;
 			}

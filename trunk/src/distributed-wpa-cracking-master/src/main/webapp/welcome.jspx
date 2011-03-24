@@ -79,6 +79,10 @@
 				
 				<p><a href="${pageContext.request.contextPath}/servlets/StartWorkerNodes">Start Worker Nodes</a></p>
 				<p><a href="${pageContext.request.contextPath}/servlets/KillWorkerNodes">Kill Worker Nodes</a></p>
+				
+				<hr />
+				
+				<p><a href="${pageContext.request.contextPath}/servlets/OutputWebAppLog">Output web application log</a></p>
 			</td>
 		</tr>
 	</table>
