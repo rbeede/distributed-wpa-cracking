@@ -3,6 +3,7 @@ package com.google.code.distributedwpacracking.master;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -61,14 +62,26 @@ public enum WebAppConfig {
 	}
 	
 	
-	public String[] getWorkerNodes() {
+	public InetSocketAddress[] getWorkerNodes() {
 		final String propValue = this.get("Worker Nodes");
 		
 		if(StringUtils.isEmpty(propValue)) {
 			return null;
-		} else {
-			return propValue.split(",");
 		}
+		
+		
+		final String[] hostnamesAndPorts = propValue.split(",");
+		
+		final InetSocketAddress[] addresses = new InetSocketAddress[hostnamesAndPorts.length];
+		
+		for(int i = 0; i < hostnamesAndPorts.length; i++) {
+			final String hostname = hostnamesAndPorts[i].substring(0, hostnamesAndPorts[i].lastIndexOf(':'));
+			final int port = Integer.parseInt(hostnamesAndPorts[i].substring(hostnamesAndPorts[i].lastIndexOf(':')+1));
+			
+			addresses[i] = InetSocketAddress.createUnresolved(hostname, port);
+		}
+		
+		return addresses;
 	}
 	
 	
@@ -80,5 +93,23 @@ public enum WebAppConfig {
 		} else {
 			return new File(propValue);
 		}
+	}
+	
+	
+	public String getWorkerNodeStartCommand() {
+		return this.get("Worker Node Start Command"); 
+	}
+	
+	public String getWorkerNodeKillCommand() {
+		return this.get("Worker Node Kill Command");
+	}
+	
+	
+	public String getWorkerNodeSshUsername() {
+		return this.get("Worker Node SSH Username"); 
+	}
+	
+	public String getWorkerNodeSshPrivateKeyFile() {
+		return this.get("Worker Node SSH Private Key (no password) File"); 
 	}
 }
