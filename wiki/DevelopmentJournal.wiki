@@ -8,6 +8,13 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+
+= 2011-03-24 12:12 - Rodney Beede - Setup of master node =
+
+Spent 2 hours with a weird Tomcat slow startup issue.  I had to reboot the server and it just went away.
+
+Got https://univ-colo-vm-198-41-9-71.cisco.com:8443/distributed-wpa-cracking-master/welcome.jspx setup as a secure URL with usernames.
+
 = 2011-03-24 01:13 - Rodney Beede - Coding on master node =
 
 The code is ready for use.  Some minor tweaks could be made later on to improve performance if really needed.
