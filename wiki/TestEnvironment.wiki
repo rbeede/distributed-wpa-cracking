@@ -95,6 +95,14 @@ The command is {{{TODO}}}
 
 Each local node (not the master) has a directory */localdata/* which holds the 40GB rainbow table.
 
+= Master node web access =
+
+= 2011-03-24 12:12 - Rodney Beede - Setup of master node =
+
+Requires username and password too.  Self-signed SSL certificate.
+
+https://univ-colo-vm-198-41-9-71.cisco.com:8443/distributed-wpa-cracking-master/welcome.jspx
+
 = References =
 
 https://help.ubuntu.com/community/SettingUpNFSHowTo
