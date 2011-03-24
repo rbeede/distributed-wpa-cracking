@@ -45,7 +45,14 @@
 		<servlet-name>KillWorkerNodes</servlet-name>
 		<url-pattern>/servlets/KillWorkerNodes</url-pattern>
 	</servlet-mapping>
-
+	<servlet>
+		<servlet-name>OutputWebAppLog</servlet-name>
+		<servlet-class>com.google.code.distributedwpacracking.master.servlets.OutputWebAppLog</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>OutputWebAppLog</servlet-name>
+		<url-pattern>/servlets/OutputWebAppLog</url-pattern>
+	</servlet-mapping>
 
 	<security-constraint>
 		<web-resource-collection>
