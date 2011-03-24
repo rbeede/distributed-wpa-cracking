@@ -78,7 +78,7 @@ public enum WebAppConfig {
 			final String hostname = hostnamesAndPorts[i].substring(0, hostnamesAndPorts[i].lastIndexOf(':'));
 			final int port = Integer.parseInt(hostnamesAndPorts[i].substring(hostnamesAndPorts[i].lastIndexOf(':')+1));
 			
-			addresses[i] = InetSocketAddress.createUnresolved(hostname, port);
+			addresses[i] = new InetSocketAddress(hostname, port);
 		}
 		
 		return addresses;
