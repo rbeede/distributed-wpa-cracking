@@ -26,16 +26,9 @@
 		</layout>
 	</appender>
 	
-	<appender name="Ganymede" class="org.apache.log4j.net.SocketAppender">
-		<param name="remoteHost" value="localhost"/>
-		<param name="port" value="4445"/>
-		<param name="locationInfo" value="true"/>
-	</appender>
-
 	<root>
 		<priority value="debug" />
 		<appender-ref ref="rolling" />
-		<appender-ref ref="Ganymede"/>
 	</root>
 
 </log4j:configuration>

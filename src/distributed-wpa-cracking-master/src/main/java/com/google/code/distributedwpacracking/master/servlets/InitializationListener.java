@@ -8,6 +8,7 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
 
+import com.google.code.distributedwpacracking.master.JobRunner;
 import com.google.code.distributedwpacracking.master.WebAppConfig;
 
 public class InitializationListener implements ServletContextListener {
@@ -35,7 +36,7 @@ public class InitializationListener implements ServletContextListener {
 		}
 		
 		
-		
+		new Thread(new JobRunner()).start();
 	}
 
 	@Override
