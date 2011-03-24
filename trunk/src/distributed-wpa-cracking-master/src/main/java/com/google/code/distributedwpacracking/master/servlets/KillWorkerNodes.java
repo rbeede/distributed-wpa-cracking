@@ -26,10 +26,12 @@ public class KillWorkerNodes extends HttpServlet {
 		
 		final InetSocketAddress[] addresses = WebAppConfig.getInstance().getWorkerNodes();
 		
-		final String cmd = WebAppConfig.getInstance().getWorkerNodeStartCommand();
+		final String cmd = WebAppConfig.getInstance().getWorkerNodeKillCommand();
 		
 		final String sshUsername = WebAppConfig.getInstance().getWorkerNodeSshUsername();
 		final String sshPrivateKey = WebAppConfig.getInstance().getWorkerNodeSshPrivateKeyFile();
+		
+		final StringBuffer sbResponseText = new StringBuffer();
 		
 		//FIXME Use threading to report back status via Callable so all ssh commands start at once
 		for(int i = 0; i < addresses.length; i++) {
@@ -57,19 +59,24 @@ public class KillWorkerNodes extends HttpServlet {
 			} else if(!cmdOutput[2].equals("0")) {
 				// Error occurred
 				log.warn(cmd + " for " + address.toString());
-				log.warn("STDOUT for " + addresses.toString());
+				log.warn("STDOUT for " + address.toString());
 				log.warn(cmdOutput[0]);
 				log.warn("STDERR for " + address.toString());
 				log.warn(cmdOutput[1]);
 				log.warn("ExitCode for " + address.toString() + " was " + cmdOutput[2]);
 				
-				// Could mean that process wasn't running so ignore the error
+				// Might have tried to kill something that wasn't running anyway
+				sbResponseText.append(address.toString());
+				sbResponseText.append(cmdOutput[0]);
+				sbResponseText.append(cmdOutput[1]);
+				sbResponseText.append(cmdOutput[2]);
+				sbResponseText.append("\n\t");
 			} else {
 				log.info(address.toString() + " ran kill command with success");
 			}
 		}
 				
-		req.getSession().setAttribute("StatusMessage", "Commands to kill cluster were successful.  Update page to see node status.");
+		req.getSession().setAttribute("StatusMessage", "Kill command sent.  Command responses:  " + sbResponseText.toString());
 		resp.sendRedirect(resp.encodeRedirectURL(getServletContext().getContextPath() + "/welcome.jspx"));
 	}
 }
