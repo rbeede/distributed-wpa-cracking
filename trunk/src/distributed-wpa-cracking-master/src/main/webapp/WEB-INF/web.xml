@@ -10,7 +10,7 @@
 		the web.xml because it makes redeployment easier to avoid having to update web.xml for each environment.
 		</description>
 		<param-name>WebAppConfig.xml Full Pathname</param-name>
-		<param-value>/Software/configs/WebAppConfig.xml</param-value>
+		<param-value>/home/DIST-WPA/group-shared/Software/configs/WebAppConfig.xml</param-value>
 	</context-param>
 
 	<listener>
