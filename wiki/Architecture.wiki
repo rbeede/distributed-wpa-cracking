@@ -82,6 +82,8 @@ Worker node returns one of:
 	STATUS\0\31RUNNING\0\31jobidF3234\0\31\4			(currently running job with given id)
 
 	STATUS\0\31FINISHED\0\31jobidF3234\0\31\4			(last job finished was jobidF3224, ready for next query, only remembers last one finished)
+
+	STATUS\0\31KILLED\0\31jobidF3234\0\31\4			Job was killed before it could finish.
 	
 	
 Killing job on nodes
@@ -90,7 +92,11 @@ Suppose user wants to cancel a running job or one of the worker nodes found the 
 
 KILLJOB\0\31jobidF32234\0\31\4
 
-Response will either be error if that job wasn't in the running state or the following success message:  SUCCESS_KILL\0\31jobidF32234\0\31\4
+Response will either be error if that job wasn't in the running state or the following success message:
+
+STATUS\0\31KILLED\0\31jobidF32234\0\31\4
+
+Doing a kill on a job that is already in the FINISHED state does not change it to a KILLED state but instead gives an ERROR back.
 
 
 
