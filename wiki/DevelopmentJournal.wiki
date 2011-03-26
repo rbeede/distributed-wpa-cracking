@@ -9,6 +9,10 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 Newest at top
 
 
+= 2011-03-26 13:37 - Ryan Kroiss - Worker node code = 
+
+I'm working on the worker code.  For the moment, I'm just testing locally.  I hope to get the communication side of things up soon.
+
 = 2011-03-24 12:12 - Rodney Beede - Setup of master node =
 
 Spent 2 hours with a weird Tomcat slow startup issue.  I had to reboot the server and it just went away.
