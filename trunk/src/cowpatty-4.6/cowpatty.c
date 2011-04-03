@@ -35,6 +35,7 @@
 #define MAXPASSPHRASE 256
 #define DOT1X_LLCTYPE "\x88\x8e"
 
+#include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,6 +44,8 @@
 #include <pcap.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <fcntl.h>
 
 #include "cowpatty.h"
@@ -51,6 +54,11 @@
 #include "sha1.h"
 #include "md5.h"
 #include "radiotap.h"
+
+#define LOADED 1
+#define RUNNING 2
+#define FINISHED 3
+#define KILLED 4
 
 /* Globals */
 pcap_t *p = NULL;
@@ -63,6 +71,7 @@ char *words;
    malloc/free for each entry. */
 char password_buf[65];
 unsigned long wordstested = 0;
+int status = 0;
 
 /* Prototypes */
 void wpa_pmk_to_ptk(u8 * pmk, u8 * addr1, u8 * addr2,
@@ -80,6 +89,12 @@ void printstats(struct timeval start, struct timeval end,
 		unsigned long int wordcount);
 int nextdictword(char *word, FILE * fp);
 int nexthashrec(FILE * fp, struct hashdb_rec *rec);
+void fatal(const char *msg);
+
+void fatal(const char *msg) {
+    perror(msg);
+    exit(1);
+}
 
 void usage(char *message)
 {
@@ -930,124 +945,306 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 	return 1;
 }
 
-    int main(int argc, char **argv)
-    {
-        struct user_opt opt;
-        struct crack_data cdata;
-        struct capture_data capdata;
-        struct wpa_eapol_key *eapkeypacket;
-        u8 eapolkey_nomic[99];
-        struct timeval start, end;
-        int ret;
-        char passphrase[MAXPASSLEN + 1];
+//TODO: modify this so that it can send error messages too
+void sendPacket(int sockfd,char* status,char* jobid) {
 
-        printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
-               PROGNAME, VER);
+    char buffer[1024],packet[4096];
+    memset(&buffer,0,1024);
+    memset(&packet,0,4096);
 
-        memset(&opt, 0, sizeof(struct user_opt));
-        memset(&capdata, 0, sizeof(struct capture_data));
-        memset(&cdata, 0, sizeof(struct crack_data));
-        memset(&eapolkey_nomic, 0, sizeof(eapolkey_nomic));
+    //TODO: fix this (it breaks the jobid)
+    int len = 8;
+    strcat(buffer, "STATUS");
+    buffer[len++] = '\31';
+    strcat(buffer, status);
+    len += sizeof(status);
+    buffer[len] = '\31';
+    strcat(buffer, jobid);
+    len += sizeof(status);
+    buffer[len] = '\31';
+    buffer[len+1] = '\4';
 
-        /* Collect and test command-line arguments */
-        parseopts(&opt, argc, argv);
-        testopts(&opt);
-        printf("\n");
+    int n = write(sockfd,buffer,1024);
+    
+    printf("end %d\n", n);
 
-        /* Populate capdata struct */
-        strncpy(capdata.pcapfilename, opt.pcapfile,
+}
+
+int processConnection(int master_socket_fd) {
+    //TODO: define buffer sizes above
+    int MAX_BUFFER_SIZE = 4096;
+    int MAX_SUB_LEN = 1024;
+
+    char buffer[MAX_BUFFER_SIZE];  // packet buffer
+    int len;         // number of bytes read from packet
+
+    // clear packet buffer
+    memset(buffer, 0, MAX_BUFFER_SIZE);
+
+    // read packet
+    len = read(master_socket_fd, buffer, MAX_BUFFER_SIZE);
+    if (len < 0) fatal("Error while reading from socket");
+
+    // parse packet
+    int i;            // for loop counter
+    int sub_i=0;      // index into sub buffer
+    int sub_count=0;  // number of sub buffers
+
+    //TODO: make this a struct perhaps
+    char message[MAX_SUB_LEN];      // command/query message from master
+    char jobid[MAX_SUB_LEN];        // job ID being queried
+    char capture_path[MAX_SUB_LEN]; // path to capture file (if applicable)
+    char output_path[MAX_SUB_LEN];  // path to output directory (if applicable)
+
+    // clear buffers
+    memset(&message,      0, MAX_SUB_LEN);
+    memset(&jobid,        0, MAX_SUB_LEN);
+    memset(&capture_path, 0, MAX_SUB_LEN);
+    memset(&output_path,  0, MAX_SUB_LEN);
+    
+    for (i=0; i<len; i++) {
+	if (buffer[i] == '\4') {
+	    fprintf(stdout, "MESSAGE     : %s\n",message);
+	    fprintf(stdout, "JOB ID      : %s\n",jobid);
+	    fprintf(stdout, "CAPTURE PATH: %s\n",capture_path);
+	    fprintf(stdout, "OUTPUT PATH : %s\n",output_path);
+	    break;
+	} else if (buffer[i] == '\31') {
+	    sub_i = 0;
+	    sub_count++;
+	} else {
+	    switch (sub_count) {
+	    case 0: message[sub_i]      = buffer[i]; break;
+	    case 1: jobid[sub_i]        = buffer[i]; break;
+	    case 2: capture_path[sub_i] = buffer[i]; break;
+	    case 3: output_path[sub_i]  = buffer[i]; break;
+	    default: break;
+	    }
+	    sub_i++;
+	}
+    }
+
+    if (strcmp(message,"START")==0) {
+	//TODO: start new thread that does work
+	status = RUNNING;
+	sendPacket(master_socket_fd,"SUCCESS_START",jobid);
+    } else if (strcmp(message,"STATUS")==0) {
+	switch(status) {
+	case LOADED:   sendPacket(master_socket_fd,"LOADED",NULL);    break;
+	case RUNNING:  sendPacket(master_socket_fd,"RUNNING",jobid);  break;
+	case FINISHED: sendPacket(master_socket_fd,"FINISHED",jobid); break;
+	case KILLED:   sendPacket(master_socket_fd,"KILLED",jobid);   break;
+	default: break;
+	}
+    } else if (strcmp(message,"KILLJOB")==0) {
+	//TODO: kill specified job
+	if (status==KILLED) sendPacket(master_socket_fd,"KILLED",jobid);
+	else sendPacket(master_socket_fd,"",NULL);//TODO: should be error
+    }
+
+    return 0;
+}
+
+void* listenForPacket(void* arg1) {
+
+    int portNum = (int)arg1;
+    int worker_socket_fd,master_socket_fd;
+    struct sockaddr_in worker_addr,master_addr;
+    socklen_t master_len;
+
+    // create socket using IPv4 protocol
+    worker_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (worker_socket_fd < 0)
+	fatal("Unable to open socket\n");
+
+    // set up address for socket
+    memset(&worker_addr, 0, sizeof(worker_addr));
+    worker_addr.sin_family = AF_INET;
+    worker_addr.sin_addr.s_addr = INADDR_ANY;
+    worker_addr.sin_port = htons(portNum);
+
+    // bind address to socket
+    if (bind(worker_socket_fd, (struct sockaddr *) &worker_addr,
+	     sizeof(worker_addr)) < 0)
+	fatal("Unable to bind address to socket\n");
+
+    // set up socket to listen
+    //TODO: not sure about backlog (2nd param)
+    listen(worker_socket_fd, 0);
+    
+    // init size of master address
+    master_len = sizeof(master_addr);
+
+    //TODO: do we need to set up signal to prevent zombie procs
+    // defense against zombies
+    signal(SIGCHLD, SIG_IGN);
+
+    int ret;
+    // loop until we receive a packet
+    while(1) {
+	// accept connection from some client
+	master_socket_fd = accept(worker_socket_fd,
+				  (struct sockaddr *) &master_addr,
+				  &master_len);
+	if (master_socket_fd < 0) fatal("Error occurred on accept\n");
+
+	//TODO: process connection here
+	ret = processConnection(master_socket_fd);
+	//TODO: close connections when finished
+	
+	/*
+	if (!ret) {
+	    if (status==LOADED) 
+		sendPacket(master_socket_fd,"LOADED","jobidF3234");
+	}
+	*/
+    }
+}
+
+void *loadRainbowTable(void *ptr) {
+    char *message;
+    message = (char*)ptr;
+    fprintf(stdout,"%s\n",message);
+    status = LOADED;
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    
+    struct user_opt opt;
+    struct crack_data cdata;
+    struct capture_data capdata;
+    struct wpa_eapol_key *eapkeypacket;
+    u8 eapolkey_nomic[99];
+    struct timeval start, end;
+    int ret;
+    char passphrase[MAXPASSLEN + 1];
+    
+    printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
+	   PROGNAME, VER);
+
+    //TODO: parse arguments here
+
+    // create threads
+    pthread_t comm_thread,load_thread;
+    int commRet,loadRet;
+    char *msg2 = "thread: load";
+    commRet = pthread_create(&comm_thread,NULL,listenForPacket,(void*)8080);
+    loadRet = pthread_create(&load_thread,NULL,loadRainbowTable,(void*)msg2);
+
+    // comm thread
+    pthread_join(comm_thread,NULL);
+
+    printf("listen thread: %d\n",commRet);
+    printf("load thread: %d\n",commRet);
+    exit(0);
+
+    //TODO: we don't want to reach this part yet
+
+    memset(&opt, 0, sizeof(struct user_opt));
+    memset(&capdata, 0, sizeof(struct capture_data));
+    memset(&cdata, 0, sizeof(struct crack_data));
+    memset(&eapolkey_nomic, 0, sizeof(eapolkey_nomic));
+    
+    /* Collect and test command-line arguments */
+    parseopts(&opt, argc, argv);
+    testopts(&opt);
+    printf("\n");
+    
+    /* Populate capdata struct */
+    strncpy(capdata.pcapfilename, opt.pcapfile,
             sizeof(capdata.pcapfilename));
-        if (openpcap(&capdata) != 0) {
-            printf("Unsupported or unrecognized pcap file.\n");
-            exit(-1);
-        }
-
-        /* populates global *packet */
-        while (getpacket(&capdata) > 0) {
-            if (opt.verbose > 2) {
-                lamont_hdump(packet, h->len);
-            }
-            /* test packet for data that we are looking for */
-            if (memcmp(&packet[capdata.l2type_offset], DOT1X_LLCTYPE, 2) ==
-                0 && (h->len >
-                capdata.l2type_offset + sizeof(struct wpa_eapol_key))) {
-                /* It's a dot1x frame, process it */
-                handle_dot1x(&cdata, &capdata, &opt);
-                if (cdata.aaset && cdata.spaset && cdata.snonceset &&
-                    cdata.anonceset && cdata.keymicset
-                    && cdata.eapolframeset) {
-                    /* We've collected everything we need. */
-                    break;
-                }
-            }
-        }
-
-        closepcap(&capdata);
-
-        if (!(cdata.aaset && cdata.spaset && cdata.snonceset &&
-              cdata.anonceset && cdata.keymicset && cdata.eapolframeset)) {
-            printf("End of pcap capture file, incomplete four-way handshake "
-                   "exchange.  Try using a\ndifferent capture.\n");
-            exit(-1);
-        } else {
-            if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
-                printf("Collected all necessary data to mount crack"
-                            " against WPA2/PSK passphrase.\n");
-             } else if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_MD5_RC4) {
-                printf("Collected all necessary data to mount crack"
-                            " against WPA/PSK passphrase.\n");
-            }
-        }
-
-        if (opt.verbose > 1) {
-            dump_all_fields(cdata, &opt);
-        }
-
-        if (opt.checkonly) {
-            /* Don't attack the PSK, just return non-error return code */
-            return 0;
-        }
-
-	/* Zero mic and length data for hmac-md5 calculation */
-	eapkeypacket =
-	    (struct wpa_eapol_key *)&cdata.eapolframe[EAPDOT1XOFFSET];
-	memset(&eapkeypacket->key_mic, 0, sizeof(eapkeypacket->key_mic));
-	if (opt.nonstrict == 0) {
-		eapkeypacket->key_data_length = 0;
+    if (openpcap(&capdata) != 0) {
+	printf("Unsupported or unrecognized pcap file.\n");
+	exit(-1);
+    }
+    
+    /* populates global *packet */
+    while (getpacket(&capdata) > 0) {
+	if (opt.verbose > 2) {
+	    lamont_hdump(packet, h->len);
 	}
-
-	printf("Starting dictionary attack.  Please be patient.\n");
-	fflush(stdout);
-
-	signal(SIGINT, cleanup);
-	signal(SIGTERM, cleanup);
-	signal(SIGQUIT, cleanup);
-
-	gettimeofday(&start, 0);
-
-	if (!IsBlank(opt.hashfile)) {
-		ret = hashfile_attack(&opt, passphrase, &cdata);
-	} else if (!IsBlank(opt.dictfile)) {
-		ret = dictfile_attack(&opt, passphrase, &cdata);
-	} else {
-		usage("Must specify dictfile or hashfile (-f or -d)");
-		exit(-1);
+	/* test packet for data that we are looking for */
+	if (memcmp(&packet[capdata.l2type_offset], DOT1X_LLCTYPE, 2) ==
+	    0 && (h->len >
+		  capdata.l2type_offset + sizeof(struct wpa_eapol_key))) {
+	    /* It's a dot1x frame, process it */
+	    handle_dot1x(&cdata, &capdata, &opt);
+	    if (cdata.aaset && cdata.spaset && cdata.snonceset &&
+		cdata.anonceset && cdata.keymicset
+		&& cdata.eapolframeset) {
+		/* We've collected everything we need. */
+		break;
+	    }
 	}
-
-	if (ret == 0) {
-		printf("\nThe PSK is \"%s\".\n", passphrase);
-		gettimeofday(&end, 0);
-		printstats(start, end, wordstested);
-		return 0;
-	} else {
-		printf("Unable to identify the PSK from the dictionary file. " 
-	       		"Try expanding your\npassphrase list, and double-check"
-		        " the SSID.  Sorry it didn't work out.\n");
-		gettimeofday(&end, 0);
-		printstats(start, end, wordstested);
-		return 1;
+    }
+    
+    closepcap(&capdata);
+    
+    if (!(cdata.aaset && cdata.spaset && cdata.snonceset &&
+	  cdata.anonceset && cdata.keymicset && cdata.eapolframeset)) {
+	printf("End of pcap capture file, incomplete four-way handshake "
+	       "exchange.  Try using a\ndifferent capture.\n");
+	exit(-1);
+    } else {
+	if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
+	    printf("Collected all necessary data to mount crack"
+		   " against WPA2/PSK passphrase.\n");
+	} else if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_MD5_RC4) {
+	    printf("Collected all necessary data to mount crack"
+		   " against WPA/PSK passphrase.\n");
 	}
-
+    }
+    
+    if (opt.verbose > 1) {
+	dump_all_fields(cdata, &opt);
+    }
+    
+    if (opt.checkonly) {
+	/* Don't attack the PSK, just return non-error return code */
+	return 0;
+    }
+    
+    /* Zero mic and length data for hmac-md5 calculation */
+    eapkeypacket =
+	(struct wpa_eapol_key *)&cdata.eapolframe[EAPDOT1XOFFSET];
+    memset(&eapkeypacket->key_mic, 0, sizeof(eapkeypacket->key_mic));
+    if (opt.nonstrict == 0) {
+	eapkeypacket->key_data_length = 0;
+    }
+    
+    printf("Starting dictionary attack.  Please be patient.\n");
+    fflush(stdout);
+    
+    signal(SIGINT, cleanup);
+    signal(SIGTERM, cleanup);
+    signal(SIGQUIT, cleanup);
+    
+    gettimeofday(&start, 0);
+    
+    if (!IsBlank(opt.hashfile)) {
+	ret = hashfile_attack(&opt, passphrase, &cdata);
+    } else if (!IsBlank(opt.dictfile)) {
+	ret = dictfile_attack(&opt, passphrase, &cdata);
+    } else {
+	usage("Must specify dictfile or hashfile (-f or -d)");
+	exit(-1);
+    }
+    
+    if (ret == 0) {
+	printf("\nThe PSK is \"%s\".\n", passphrase);
+	gettimeofday(&end, 0);
+	printstats(start, end, wordstested);
+	return 0;
+    } else {
+	printf("Unable to identify the PSK from the dictionary file. " 
+	       "Try expanding your\npassphrase list, and double-check"
+	       " the SSID.  Sorry it didn't work out.\n");
+	gettimeofday(&end, 0);
+	printstats(start, end, wordstested);
 	return 1;
-
+    }
+    
+    return 1;
+    
 }
