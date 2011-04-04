@@ -34,6 +34,8 @@
 #define VER "4.6"
 #define MAXPASSPHRASE 256
 #define DOT1X_LLCTYPE "\x88\x8e"
+#define MAX_PKT_LEN 4096
+#define MAX_STR_LEN 1024
 
 #include <pthread.h>
 #include <stdlib.h>
@@ -945,44 +947,56 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 	return 1;
 }
 
-//TODO: modify this so that it can send error messages too
-void sendPacket(int sockfd,char* status,char* jobid) {
-
-    char buffer[1024],packet[4096];
-    memset(&buffer,0,1024);
-    memset(&packet,0,4096);
-
-    //TODO: fix this (it breaks the jobid)
-    int len = 8;
-    strcat(buffer, "STATUS");
-    buffer[len++] = '\31';
-    strcat(buffer, status);
-    len += sizeof(status);
-    buffer[len] = '\31';
-    strcat(buffer, jobid);
-    len += sizeof(status);
-    buffer[len] = '\31';
-    buffer[len+1] = '\4';
-
-    int n = write(sockfd,buffer,1024);
+void getCracking(char* capture_path,char* output_path) {
     
-    printf("end %d\n", n);
+}
+
+int sendPacket(int sockfd,char* type,char* status,char* jobid) {
+
+    char buffer[MAX_STR_LEN],packet[MAX_PKT_LEN];
+    memset(&buffer,0,MAX_STR_LEN);
+    memset(&packet,0,MAX_PKT_LEN);
+
+    if (type==NULL) return -1;
+    int len = strlen(type)+1;
+    if (len>MAX_STR_LEN) return -1;
+
+    memcpy(packet,type,len);
+    packet[len++] = '\31';
+
+    printf("type=%s\tpacket=%s\n",type,packet);
+
+    if (status!=NULL) {
+	if (strlen(status)+1>MAX_STR_LEN) return -1;
+	memcpy(&packet[len],status,strlen(status)+1);
+	len += strlen(status)+1;
+	packet[len++] = '\31';
+	
+	if (jobid!=NULL) {
+	    if (strlen(jobid)+1>MAX_STR_LEN) return -1;
+	    memcpy(&packet[len],jobid,strlen(jobid)+1);
+	    len += strlen(jobid)+1;
+	    packet[len++] = '\31';
+	}
+    }
+    packet[len] = '\4';
+
+    int n = write(sockfd, packet, MAX_STR_LEN);
+    
+    return n;
 
 }
 
 int processConnection(int master_socket_fd) {
-    //TODO: define buffer sizes above
-    int MAX_BUFFER_SIZE = 4096;
-    int MAX_SUB_LEN = 1024;
 
-    char buffer[MAX_BUFFER_SIZE];  // packet buffer
+    char buffer[MAX_PKT_LEN];  // packet buffer
     int len;         // number of bytes read from packet
 
     // clear packet buffer
-    memset(buffer, 0, MAX_BUFFER_SIZE);
+    memset(buffer, 0, MAX_PKT_LEN);
 
     // read packet
-    len = read(master_socket_fd, buffer, MAX_BUFFER_SIZE);
+    len = read(master_socket_fd, buffer, MAX_PKT_LEN);
     if (len < 0) fatal("Error while reading from socket");
 
     // parse packet
@@ -991,16 +1005,16 @@ int processConnection(int master_socket_fd) {
     int sub_count=0;  // number of sub buffers
 
     //TODO: make this a struct perhaps
-    char message[MAX_SUB_LEN];      // command/query message from master
-    char jobid[MAX_SUB_LEN];        // job ID being queried
-    char capture_path[MAX_SUB_LEN]; // path to capture file (if applicable)
-    char output_path[MAX_SUB_LEN];  // path to output directory (if applicable)
+    char message[MAX_STR_LEN];      // command/query message from master
+    char jobid[MAX_STR_LEN];        // job ID being queried
+    char capture_path[MAX_STR_LEN]; // path to capture file (if applicable)
+    char output_path[MAX_STR_LEN];  // path to output directory (if applicable)
 
     // clear buffers
-    memset(&message,      0, MAX_SUB_LEN);
-    memset(&jobid,        0, MAX_SUB_LEN);
-    memset(&capture_path, 0, MAX_SUB_LEN);
-    memset(&output_path,  0, MAX_SUB_LEN);
+    memset(&message,      0, MAX_STR_LEN);
+    memset(&jobid,        0, MAX_STR_LEN);
+    memset(&capture_path, 0, MAX_STR_LEN);
+    memset(&output_path,  0, MAX_STR_LEN);
     
     for (i=0; i<len; i++) {
 	if (buffer[i] == '\4') {
@@ -1027,19 +1041,30 @@ int processConnection(int master_socket_fd) {
     if (strcmp(message,"START")==0) {
 	//TODO: start new thread that does work
 	status = RUNNING;
-	sendPacket(master_socket_fd,"SUCCESS_START",jobid);
+	sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
     } else if (strcmp(message,"STATUS")==0) {
 	switch(status) {
-	case LOADED:   sendPacket(master_socket_fd,"LOADED",NULL);    break;
-	case RUNNING:  sendPacket(master_socket_fd,"RUNNING",jobid);  break;
-	case FINISHED: sendPacket(master_socket_fd,"FINISHED",jobid); break;
-	case KILLED:   sendPacket(master_socket_fd,"KILLED",jobid);   break;
+	case LOADED:
+	    sendPacket(master_socket_fd,"STATUS","LOADED",NULL);
+	    break;
+	case RUNNING:
+	    sendPacket(master_socket_fd,"STATUS","RUNNING",jobid);
+	    break;
+	case FINISHED:
+	    sendPacket(master_socket_fd,"STATUS","FINISHED",jobid);
+	    break;
+	case KILLED:
+	    sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+	    break;
 	default: break;
 	}
     } else if (strcmp(message,"KILLJOB")==0) {
 	//TODO: kill specified job
-	if (status==KILLED) sendPacket(master_socket_fd,"KILLED",jobid);
-	else sendPacket(master_socket_fd,"",NULL);//TODO: should be error
+	if (status==KILLED)
+	    sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+	else
+	    //TODO: should be error
+	    sendPacket(master_socket_fd,"STATUS","",NULL);
     }
 
     return 0;
