@@ -61,3 +61,4 @@ In case the above steps do not work for you,please refer to the detailed instruc
   * [http://www.aircrack-ng.org/]
   * [http://www.aircrack-ng.org/doku.php?id=compatibility_drivers]
   * [http://www.aircrack-ng.org/doku.php?id=cracking_wpa]
+  * [http://www.backtrack-linux.org/ BackTrack Linux distro] that has aircrack pre-installed.  Also has a downloadable virtual machine which is handy for capturing wifi data.  Just add our capture script to it, a compatible wireless card, and you're ready to go.
