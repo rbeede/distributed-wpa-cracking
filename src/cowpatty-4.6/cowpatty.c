@@ -38,10 +38,12 @@
 #define MAX_STR_LEN 1024
 
 #include <pthread.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <getopt.h>
 #include <unistd.h>
 #include <pcap.h>
 #include <signal.h>
@@ -74,6 +76,19 @@ char *words;
 char password_buf[65];
 unsigned long wordstested = 0;
 int status = 0;
+char rainbow_table_path[256];
+int port_num;
+int log_fd;
+int node_count;
+int node_rank;
+
+struct job {
+    char jobid[MAX_STR_LEN];
+    char capture_path[MAX_STR_LEN];
+    char output_path[MAX_STR_LEN];
+    pthread_t thread;
+};
+struct job currJob;
 
 /* Prototypes */
 void wpa_pmk_to_ptk(u8 * pmk, u8 * addr1, u8 * addr2,
@@ -947,10 +962,6 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 	return 1;
 }
 
-void getCracking(char* capture_path,char* output_path) {
-    
-}
-
 int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 
     char buffer[MAX_STR_LEN],packet[MAX_PKT_LEN];
@@ -987,10 +998,17 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 
 }
 
+void* getCracking(void* arg) {
+    printf("hello from thread\n");
+    
+    status = FINISHED;
+    pthread_exit(NULL);
+}
+
 int processConnection(int master_socket_fd) {
 
+    int len;                   // number of bytes read from packet
     char buffer[MAX_PKT_LEN];  // packet buffer
-    int len;         // number of bytes read from packet
 
     // clear packet buffer
     memset(buffer, 0, MAX_PKT_LEN);
@@ -999,12 +1017,10 @@ int processConnection(int master_socket_fd) {
     len = read(master_socket_fd, buffer, MAX_PKT_LEN);
     if (len < 0) fatal("Error while reading from socket");
 
-    // parse packet
     int i;            // for loop counter
     int sub_i=0;      // index into sub buffer
     int sub_count=0;  // number of sub buffers
 
-    //TODO: make this a struct perhaps
     char message[MAX_STR_LEN];      // command/query message from master
     char jobid[MAX_STR_LEN];        // job ID being queried
     char capture_path[MAX_STR_LEN]; // path to capture file (if applicable)
@@ -1016,6 +1032,7 @@ int processConnection(int master_socket_fd) {
     memset(&capture_path, 0, MAX_STR_LEN);
     memset(&output_path,  0, MAX_STR_LEN);
     
+    // parse packet
     for (i=0; i<len; i++) {
 	if (buffer[i] == '\4') {
 	    fprintf(stdout, "MESSAGE     : %s\n",message);
@@ -1039,6 +1056,17 @@ int processConnection(int master_socket_fd) {
     }
 
     if (strcmp(message,"START")==0) {
+	//TODO: check if a job is running
+	
+
+
+
+	memset(&currJob,0,sizeof(struct job));
+	memcpy(&currJob.jobid, &jobid, MAX_STR_LEN);
+	memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
+	memcpy(&currJob.output_path, &output_path, MAX_STR_LEN);
+	//TODO: check return value
+	pthread_create(&currJob.thread,NULL,getCracking,NULL);
 	//TODO: start new thread that does work
 	status = RUNNING;
 	sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
@@ -1059,12 +1087,20 @@ int processConnection(int master_socket_fd) {
 	default: break;
 	}
     } else if (strcmp(message,"KILLJOB")==0) {
-	//TODO: kill specified job
-	if (status==KILLED)
-	    sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
-	else
-	    //TODO: should be error
-	    sendPacket(master_socket_fd,"STATUS","",NULL);
+	//TODO: check that currJob is valid
+	//if (currJob!=NULL) {
+	    int ret = pthread_cancel(currJob.thread);
+	    if (ret == 0) {
+		status = KILLED;
+		sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+	    } else if (errno == ESRCH) {
+		//TODO: this may mean that the job finished already
+		sendPacket(master_socket_fd,"ERROR","No such job exists",NULL);
+	    } else {
+		sendPacket(master_socket_fd,"ERROR",
+			   "Kill command failed for unknown reason",NULL);
+	    }
+	    //}
     }
 
     return 0;
@@ -1113,16 +1149,9 @@ void* listenForPacket(void* arg1) {
 				  &master_len);
 	if (master_socket_fd < 0) fatal("Error occurred on accept\n");
 
-	//TODO: process connection here
 	ret = processConnection(master_socket_fd);
 	//TODO: close connections when finished
 	
-	/*
-	if (!ret) {
-	    if (status==LOADED) 
-		sendPacket(master_socket_fd,"LOADED","jobidF3234");
-	}
-	*/
     }
 }
 
@@ -1133,6 +1162,53 @@ void *loadRainbowTable(void *ptr) {
     status = LOADED;
     return 0;
 }
+
+int parseopts2(int argc, char **argv) {
+
+    static struct option long_options[] = {
+	{"cluster-rainbow-table", 1, 0, 't'},
+	{"cluster-port",          1, 0, 'p'},
+	{"cluster-log",           1, 0, 'l'},
+	{"cluster-node-count",    1, 0, 'c'},
+	{"cluster-node-rank",     1, 0, 'r'},
+	{0,0,0,0}
+    };
+    int option_index = 0;
+
+    int c;
+    
+    memset(&rainbow_table_path, 0, sizeof(rainbow_table_path));
+
+    while ((c = getopt_long(argc, argv, "t:p:l:c:r:",long_options, 
+			    &option_index)) != EOF) {
+	switch (c) {
+	case 't':
+	    strncpy(rainbow_table_path, optarg, sizeof(rainbow_table_path));
+	    break;
+	case 'p':
+	    port_num = strtol(optarg,NULL,10);
+	    if (errno!=0 && port_num<0) return -1;
+	    break;
+	case 'l':
+	    log_fd = open(optarg,O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+	    if (log_fd<0) return -1;
+	    break;
+	case 'c':
+	    node_count = strtol(optarg,NULL,10);
+	    if (errno!=0 && port_num<0) return -1;
+	    break;	    
+	case 'r':
+	    node_rank = strtol(optarg,NULL,10);
+	    if (errno!=0 && node_rank<0) return -1;
+	    break;
+	default:
+	    printf("incorrect argument(s)\n");
+	    return -1;
+	}
+    }
+    return 0;
+}
+
 
 int main(int argc, char **argv) {
     
@@ -1148,14 +1224,18 @@ int main(int argc, char **argv) {
     printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
 	   PROGNAME, VER);
 
-    //TODO: parse arguments here
+    parseopts2(argc,argv);
+    printf("%s, %d, %d, %d, %d\n", rainbow_table_path,
+	   port_num, log_fd, node_count, node_rank);
 
     // create threads
     pthread_t comm_thread,load_thread;
     int commRet,loadRet;
     char *msg2 = "thread: load";
+    loadRainbowTable((void*) msg2);
     commRet = pthread_create(&comm_thread,NULL,listenForPacket,(void*)8080);
-    loadRet = pthread_create(&load_thread,NULL,loadRainbowTable,(void*)msg2);
+    //TODO: possibly register clean up calls
+    //loadRet = pthread_create(&load_thread,NULL,loadRainbowTable,(void*)msg2);
 
     // comm thread
     pthread_join(comm_thread,NULL);
