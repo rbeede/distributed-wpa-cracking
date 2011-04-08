@@ -110,9 +110,6 @@ public class WorkerNodeManager {
 	}
 	
 	
-	//TODO cancel job
-	
-	
 	private String[] commWorker(final InetSocketAddress address, final String... requestParts) throws IOException {
 		log.trace(address.toString() + "\t" + StringUtils.join(" ", requestParts));
 		
@@ -124,9 +121,7 @@ public class WorkerNodeManager {
 			log.fatal(e,e);  // OS problem
 			throw e;
 		}
-		
 
-		
 		
 		// Size check
 		int packetByteCount = 0;
