@@ -26,6 +26,7 @@ Only 1 job should be allowed to run at a time.  No queue on the worker is necess
 
 Java web application that will handle job submission and queue.  It will also be responsible for starting the worker nodes via ssh per a pre-defined configuration.
 
+It also enforces that the rainbow table SSID files are all the same byte size.  It handles calculating what ranges each worker node will do.
 
 = Master to Worker Node Communication =
 
@@ -50,9 +51,13 @@ So the first text field indicates the tcp packet type.  START (case sensitive) m
 
 So the worker node gets the following as startup command line parameters:
 
-    --cluster-rainbow-table /localdata/path/dir/with/sids/files/      (seeing this puts cowpatty into the special loading mode)
-
 	--cluster-port 54321
+
+	--cluster-rainbow-table /localdata/path/dir/with/sids/files/      (seeing this puts cowpatty into the special loading mode)
+
+	--cluster-rainbow-table-start-offset 12345   (byte offset start (inclusive) for every rainbow table SSID file where this node begins, master node will enforce that all SSID files have the same byte size)
+
+	--cluster-rainbow-table-end-offset 54321   (byte offset end (inclusive) for every rainbow table SSID file where this node, worker node must not read past this point)
 
 	--cluster-log /home/nfs_share/hostname.log   (file where local node actions are logged that aren't specific to a job)
 
