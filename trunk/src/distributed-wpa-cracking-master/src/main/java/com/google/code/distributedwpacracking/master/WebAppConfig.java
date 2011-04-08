@@ -96,6 +96,17 @@ public enum WebAppConfig {
 	}
 	
 	
+	public File getRainbowTableDirectory() {
+		final String propValue = this.get("Rainbow Table Directory");
+		
+		if(StringUtils.isEmpty(propValue)) {
+			return null;
+		} else {
+			return new File(propValue);
+		}
+	}
+	
+	
 	public String getWorkerNodeStartCommand() {
 		return this.get("Worker Node Start Command"); 
 	}

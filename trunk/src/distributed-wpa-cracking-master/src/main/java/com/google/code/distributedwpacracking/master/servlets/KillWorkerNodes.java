@@ -33,7 +33,6 @@ public class KillWorkerNodes extends HttpServlet {
 		
 		final StringBuffer sbResponseText = new StringBuffer();
 		
-		//FIXME Use threading to report back status via Callable so all ssh commands start at once
 		for(int i = 0; i < addresses.length; i++) {
 			final InetSocketAddress address = addresses[i];
 
