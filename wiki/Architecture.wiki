@@ -61,7 +61,7 @@ So the worker node gets the following as startup command line parameters:
 
 	--cluster-log /home/nfs_share/hostname.log   (file where local node actions are logged that aren't specific to a job)
 
-	*These parameters are for debugging purposes*
+*These parameters are for debugging purposes*
 
 	--cluster-rainbow-table-number-records 996123  (number of total records in each SSID file, same for all SSID)
 
