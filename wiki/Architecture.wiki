@@ -55,15 +55,25 @@ So the worker node gets the following as startup command line parameters:
 
 	--cluster-rainbow-table /localdata/path/dir/with/sids/files/      (seeing this puts cowpatty into the special loading mode)
 
-	--cluster-rainbow-table-start-offset 12345   (byte offset start (inclusive) for every rainbow table SSID file where this node begins, master node will enforce that all SSID files have the same byte size)
+	--cluster-rainbow-table-start-offset 12345   (byte offset start of first record (inclusive) for every rainbow table SSID file, master node will enforce that all SSID files have the same byte size)
 
-	--cluster-rainbow-table-end-offset 54321   (byte offset end (inclusive) for every rainbow table SSID file where this node, worker node must not read past this point)
+	--cluster-rainbow-table-end-offset 54321   (byte offset end record (inclusive) for every rainbow table SSID file, this is the starting byte of the last record this node should attempt)
 
 	--cluster-log /home/nfs_share/hostname.log   (file where local node actions are logged that aren't specific to a job)
 
+	*These parameters are for debugging purposes*
+
+	--cluster-rainbow-table-number-records 996123  (number of total records in each SSID file, same for all SSID)
+
+	--cluster-rainbow-table-record-start 0  (where this node is starting in the total number of records, 0 indexed)
+
+	--cluster-rainbow-table-record-end 123  (last record, inclusive, in total number of records that this node should try, 0 indexed)
+
+	--cluster-node-rank 0-(n-1)	(this nodes rank, 0 indexed)
+
 	--cluster-node-count 8	(number of worker nodes total)
 
-	--cluster-node-rank 1-n	(this nodes rank)
+
 
 
 Each worker node should log to a file in the /home/nfs_share/jobresults/basedir/jobidF3234/ directory:
