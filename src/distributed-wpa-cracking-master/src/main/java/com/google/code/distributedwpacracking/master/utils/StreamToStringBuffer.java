@@ -3,9 +3,10 @@ package com.google.code.distributedwpacracking.master.utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.io.IOUtils;
+
+import com.google.code.distributedwpacracking.master.GlobalConstants;
 
 /**
  * @author Rodney
@@ -34,12 +35,7 @@ public class StreamToStringBuffer extends Thread {
 	public void run() {
 		if(null == is)  return;
 		
-		InputStreamReader isr;
-		try {
-			isr = new InputStreamReader(this.is, "UTF-8");
-		} catch (final UnsupportedEncodingException e) {
-			throw new RuntimeException(e.getMessage(),e);  // If system can't support encoding then hopeless
-		}
+		final InputStreamReader isr = new InputStreamReader(this.is, GlobalConstants.UTF8);
 		
 		final char[] buffer = new char[1024 * 4];
 		

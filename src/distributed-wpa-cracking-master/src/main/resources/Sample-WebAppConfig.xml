@@ -5,7 +5,7 @@
 <entry key="Worker Nodes">dist-wpa-node01:54301,dist-wpa-node02:54302,dist-wpa-node03:54303,dist-wpa-node04:54304,dist-wpa-node05:54305,dist-wpa-node06:54306,dist-wpa-node07:54307,dist-wpa-node08:54308</entry>
 <entry key="Job Output Directory">/home/DIST-WPA/group-shared/job-output/</entry>
 <entry key="Rainbow Table Directory">/localdata/WPA_TABLES/</entry>
-<entry key="Worker Node Start Command">/home/DIST-WPA/group-shared/Software/coWPAtty-distributed/cowpatty --cluster-port ${NODE_PORT} --cluster-rainbow-table ${RAINBOW_TABLE_DIRECTORY} --cluster-rainbow-table-start-offset ${NODE_START_OFFSET} --cluster-rainbow-table-end-offset ${NODE_END_OFFSET} --cluster-log /home/DIST-WPA/group-shared/logs/${NODE_HOSTNAME}_${NODE_PORT}_${NODE_RANK}_of_${NODES_COUNT}.log -cluster-node-count ${NODES_COUNT} --cluster-node-rank ${NODE_RANK}</entry>
+<entry key="Worker Node Start Command">/home/DIST-WPA/group-shared/Software/coWPAtty-distributed/cowpatty --cluster-port ${NODE_PORT} --cluster-rainbow-table ${RAINBOW_TABLE_DIRECTORY} --cluster-rainbow-table-start-offset ${NODE_START_OFFSET} --cluster-rainbow-table-end-offset ${NODE_END_OFFSET} --cluster-rainbow-table-number-records ${NODE_RECORD_NUMBER} --cluster-rainbow-table-record-start ${NODE_RECORD_START} --cluster-rainbow-table-record-end ${NODE_RECORD_END} --cluster-log /home/DIST-WPA/group-shared/logs/${NODE_HOSTNAME}_${NODE_PORT}_${NODE_RANK}_of_${NODES_COUNT}.log -cluster-node-count ${NODES_COUNT} --cluster-node-rank ${NODE_RANK}</entry>
 <entry key="Worker Node Kill Command">killall cowpatty</entry>
 <entry key="Worker Node SSH Username">DIST-WPA</entry>
 <entry key="Worker Node SSH Private Key (no password) File">/home/DIST-WPA/group-shared/id_rsa</entry>

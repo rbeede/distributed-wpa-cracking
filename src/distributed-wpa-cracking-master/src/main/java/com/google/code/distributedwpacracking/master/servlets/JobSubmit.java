@@ -18,6 +18,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
+import com.google.code.distributedwpacracking.master.GlobalConstants;
 import com.google.code.distributedwpacracking.master.GlobalData;
 import com.google.code.distributedwpacracking.master.Job;
 import com.google.code.distributedwpacracking.master.WebAppConfig;
@@ -60,7 +61,7 @@ public class JobSubmit extends HttpServlet {
 			if(!cFileItem.isFormField() && "wireless_capture_file".equals(cFileItem.getFieldName())) {
 				wirelessCaptureUpload = cFileItem;
 			} else if(cFileItem.isFormField() && "ssid".equals(cFileItem.getFieldName())) {
-				ssid = cFileItem.getString("UTF-8");
+				ssid = cFileItem.getString(GlobalConstants.UTF8.displayName());
 			}
 		}
 		
@@ -106,7 +107,7 @@ public class JobSubmit extends HttpServlet {
 		
 		// Save the SSID information to disk too
 		final File ssidInfoFile = new File(jobDir, "SSID.txt");
-		final OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(ssidInfoFile), "UTF-8");
+		final OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(ssidInfoFile), GlobalConstants.UTF8);
 		osw.write(ssid);
 		osw.close();
 		
