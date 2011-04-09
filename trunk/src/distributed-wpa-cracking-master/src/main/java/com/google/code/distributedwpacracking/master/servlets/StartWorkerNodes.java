@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 
 import com.google.code.distributedwpacracking.master.WebAppConfig;
+import com.google.code.distributedwpacracking.master.javabeans.HashDatabase;
 import com.google.code.distributedwpacracking.master.utils.SSHRemoteCommand;
 import com.jcraft.jsch.JSchException;
 
@@ -42,7 +43,7 @@ public class StartWorkerNodes extends HttpServlet {
 			resp.sendRedirect(resp.encodeRedirectURL(getServletContext().getContextPath() + "/welcome.jspx"));
 			return;
 		} else if(rainbowTableDirectory.listFiles() == null || rainbowTableDirectory.listFiles().length == 0) {
-			final String errMsg = "No files in rainbow table directory " + rainbowTableDirectory.getAbsolutePath());
+			final String errMsg = "No files in rainbow table directory " + rainbowTableDirectory.getAbsolutePath();
 			log.error(errMsg);
 			req.getSession().setAttribute("StatusMessage", errMsg);
 			resp.sendRedirect(resp.encodeRedirectURL(getServletContext().getContextPath() + "/welcome.jspx"));
@@ -66,8 +67,28 @@ public class StartWorkerNodes extends HttpServlet {
 		}
 		
 		
-		//TODO calc offsets
+		// We just need one file since we assume they are all the same byte size (verified) and that each one has
+		//	the exact same dictionary and ordering
 		
+		// The easiest way is to just read the entire table for a single SSID into memory
+		log.debug("Parsing rainbow table hash database from " + previousFile.getAbsolutePath());
+		final HashDatabase rainbowTable;
+		try {
+			rainbowTable = new HashDatabase(previousFile);
+		} catch(final Exception e) {  // Catches any RuntimeException for us too
+			final String errMsg = "Could not parse rainbow table database:  " + e.getMessage();
+			log.error(errMsg, e);
+			req.getSession().setAttribute("StatusMessage", errMsg);
+			resp.sendRedirect(resp.encodeRedirectURL(getServletContext().getContextPath() + "/welcome.jspx"));
+			return;
+		}
+		
+		// Now we can use this information for calculating offsets later :) 
+		// Figure out the rainbow table record ranges for this node
+		final double blockSize = (double)rainbowTable.getRecords().size() / (double)addresses.length;  // must use (double) to preserve precision
+		
+		log.debug("Number of rainbow table records is " + rainbowTable.getRecords().size() + " which gives block sizes of "
+				+ blockSize + " for " + addresses.length + " worker nodes");
 
 		for(int i = 0; i < addresses.length; i++) {
 			final InetSocketAddress address = addresses[i];
@@ -76,18 +97,28 @@ public class StartWorkerNodes extends HttpServlet {
 			
 			String startCmd = startCmdTemplate.replace("${NODE_PORT}", Integer.toString(address.getPort()));
 			startCmd = startCmd.replace("${NODES_COUNT}", Integer.toString(addresses.length));
-			startCmd = startCmd.replace("${NODE_RANK}", Integer.toString(i+1));
+			startCmd = startCmd.replace("${NODE_RANK}", Integer.toString(i));
 			startCmd = startCmd.replace("${NODE_HOSTNAME}", address.getHostName());
-			startCmd = startCmd.replace("${RAINBOW_TABLE_DIRECTORY", rainbowTableDirectory.getAbsolutePath());
+			startCmd = startCmd.replace("${RAINBOW_TABLE_DIRECTORY}", rainbowTableDirectory.getAbsolutePath());
+			startCmd = startCmd.replace("${NODE_RECORD_NUMBER}", Integer.toString(rainbowTable.getRecords().size()));
 			
+			final int startRange = (int) Math.ceil(blockSize * i);
+			int endRange = (int) Math.floor((double)startRange + blockSize);
 			
-/* TODO NODE_START_OFFSET
-				NODE_END_OFFSET
-				
-				
-*/
+			if(addresses.length == (i+1) && (rainbowTable.getRecords().size() - 1 != endRange)) {
+				// Need to pick up uneven division although it should be very close
+				endRange = rainbowTable.getRecords().size() - 1;
+			}
 			
+			log.debug(i + ":\t" + startRange + " to " + endRange);
+			
+			startCmd = startCmd.replace("${NODE_START_OFFSET}", Long.toString(rainbowTable.getRecords().get(startRange).getByteOffset()));
+			startCmd = startCmd.replace("${NODE_END_OFFSET}", Long.toString(rainbowTable.getRecords().get(endRange).getByteOffset()));
+			startCmd = startCmd.replace("${NODE_RECORD_START}", Integer.toString(startRange));
+			startCmd = startCmd.replace("${NODE_RECORD_END}", Integer.toString(endRange));
 
+			log.debug("startCmd:\t" + startCmd);
+			
 			try {
 				SSHRemoteCommand.execBackground(address.getHostName(), sshUsername, sshPrivateKey, startCmd);
 			} catch(final JSchException e) {

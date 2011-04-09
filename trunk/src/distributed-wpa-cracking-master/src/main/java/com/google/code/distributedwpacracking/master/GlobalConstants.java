@@ -1,5 +1,7 @@
 package com.google.code.distributedwpacracking.master;
 
+import java.nio.charset.Charset;
+
 public class GlobalConstants {
 	/**
 	 * Including '\0' null pointer character at end
@@ -12,6 +14,6 @@ public class GlobalConstants {
 	
 	public static final int PACKET_MAX_LENGTH = 1024 * 4;
 	
-	
+	public static final Charset UTF8 = Charset.forName("UTF-8");
 
 }

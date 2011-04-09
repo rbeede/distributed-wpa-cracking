@@ -153,7 +153,7 @@ public class Job implements Runnable {
 		final File jobDir = new File(WebAppConfig.getInstance().getJobOutputDirectory(), this.getId());
 		final File solutionFile = new File(jobDir, "SOLUTION");
 
-		final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(solutionFile), "UTF-8"));
+		final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(solutionFile), GlobalConstants.UTF8));
 		final String solution = br.readLine();
 		br.close();
 		

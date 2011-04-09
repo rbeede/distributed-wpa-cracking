@@ -148,7 +148,7 @@ public class WorkerNodeManager {
 		final OutputStream os = socket.getOutputStream();
 		
 		for(final String requestPart : requestParts) {
-			os.write(requestPart.getBytes("UTF-8"));
+			os.write(requestPart.getBytes(GlobalConstants.UTF8));
 			os.write(0);  // null terminator
 			os.write(31);  // US ASCII Unit Separator
 		}
@@ -181,7 +181,7 @@ public class WorkerNodeManager {
 		for(int i = 0; i < buffer.length; i++) {
 			if('\31' == buffer[i]) {
 				// part should include '\0' from buffer, but it buffer is incorrect Java still handles the string termination
-				final String part = new String(buffer, offset, i - offset, "UTF-8");
+				final String part = new String(buffer, offset, i - offset, GlobalConstants.UTF8);
 				
 				responseParts.add(part);
 				

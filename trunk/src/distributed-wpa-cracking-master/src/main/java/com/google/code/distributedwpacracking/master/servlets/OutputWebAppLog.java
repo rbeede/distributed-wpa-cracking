@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
+import com.google.code.distributedwpacracking.master.GlobalConstants;
+
 public class OutputWebAppLog extends HttpServlet {
 	private static final long serialVersionUID = 8155994140355448770L;
 	
@@ -35,11 +37,11 @@ public class OutputWebAppLog extends HttpServlet {
 		}
 		
 		
-		final BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(logFile), "UTF-8"));
+		final BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(logFile), GlobalConstants.UTF8));
 		
 		
 		resp.setContentType("text/plain");
-		resp.setCharacterEncoding("UTF-8");
+		resp.setCharacterEncoding(GlobalConstants.UTF8.displayName());
 		resp.setStatus(HttpServletResponse.SC_OK);
 		
 		final PrintWriter writer = resp.getWriter();
