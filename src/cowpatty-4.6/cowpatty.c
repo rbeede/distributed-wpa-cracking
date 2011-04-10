@@ -81,6 +81,8 @@ int port_num;
 int log_fd;
 int node_count;
 int node_rank;
+int start_offset;
+int end_offset;
 
 struct job {
     char jobid[MAX_STR_LEN];
@@ -999,7 +1001,88 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 }
 
 void* getCracking(void* arg) {
+
+    struct user_opt opt;
+    struct crack_data cdata;
+    struct capture_data capdata;
+    struct wpa_eapol_key *eapkeypacket;
+    u8 eapolkey_nomic[99];
+    struct timeval start, end;
+    int ret;
+    char passphrase[MAXPASSLEN + 1];
+
+    //TODO: manage errors and exits differently (communicate)
     printf("hello from thread\n");
+
+    memset(&capdata, 0, sizeof(struct capture_data));
+    memset(&cdata, 0, sizeof(struct crack_data));
+    memset(&eapolkey_nomic, 0, sizeof(eapolkey_nomic));
+    
+    /* Populate capdata struct */
+    //TODO: check on these sizes
+    strncpy(capdata.pcapfilename, currJob.capture_path,
+            sizeof(capdata.pcapfilename));
+    if (openpcap(&capdata) != 0) {
+	printf("Unsupported or unrecognized pcap file.\n");
+	exit(-1);
+    }
+    
+    /* populates global *packet */
+    while (getpacket(&capdata) > 0) {
+	if (opt.verbose > 2) {
+	    lamont_hdump(packet, h->len);
+	}
+	/* test packet for data that we are looking for */
+	if (memcmp(&packet[capdata.l2type_offset], DOT1X_LLCTYPE, 2) ==
+	    0 && (h->len >
+		  capdata.l2type_offset + sizeof(struct wpa_eapol_key))) {
+	    /* It's a dot1x frame, process it */
+	    handle_dot1x(&cdata, &capdata, &opt);
+	    if (cdata.aaset && cdata.spaset && cdata.snonceset &&
+		cdata.anonceset && cdata.keymicset
+		&& cdata.eapolframeset) {
+		/* We've collected everything we need. */
+		break;
+	    }
+	}
+    }
+    
+    closepcap(&capdata);
+    
+    if (!(cdata.aaset && cdata.spaset && cdata.snonceset &&
+	  cdata.anonceset && cdata.keymicset && cdata.eapolframeset)) {
+	printf("End of pcap capture file, incomplete four-way handshake "
+	       "exchange.  Try using a\ndifferent capture.\n");
+	exit(-1);
+    } else {
+	if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
+	    printf("Collected all necessary data to mount crack"
+		   " against WPA2/PSK passphrase.\n");
+	} else if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_MD5_RC4) {
+	    printf("Collected all necessary data to mount crack"
+		   " against WPA/PSK passphrase.\n");
+	}
+    }
+    
+    /*
+    if (opt.verbose > 1) dump_all_fields(cdata, &opt);
+    
+    if (opt.checkonly) {
+	// Don't attack the PSK, just return non-error return code
+	return 0;
+    }
+    */
+    
+    /* Zero mic and length data for hmac-md5 calculation */
+    eapkeypacket =
+	(struct wpa_eapol_key *)&cdata.eapolframe[EAPDOT1XOFFSET];
+    memset(&eapkeypacket->key_mic, 0, sizeof(eapkeypacket->key_mic));
+    if (opt.nonstrict == 0) {
+	eapkeypacket->key_data_length = 0;
+    }
+    
+    printf("Starting dictionary attack.  Please be patient.\n");
+    fflush(stdout);
     
     status = FINISHED;
     pthread_exit(NULL);
@@ -1163,18 +1246,19 @@ void *loadRainbowTable(void *ptr) {
     return 0;
 }
 
-int parseopts2(int argc, char **argv) {
+int parseOptsDist(int argc, char **argv) {
 
     static struct option long_options[] = {
-	{"cluster-rainbow-table", 1, 0, 't'},
-	{"cluster-port",          1, 0, 'p'},
-	{"cluster-log",           1, 0, 'l'},
-	{"cluster-node-count",    1, 0, 'c'},
-	{"cluster-node-rank",     1, 0, 'r'},
+	{"cluster-rainbow-table",              1, 0, 't'},
+	{"cluster-port",                       1, 0, 'p'},
+	{"cluster-log",                        1, 0, 'l'},
+	{"cluster-node-count",                 1, 0, 'c'},
+	{"cluster-node-rank",                  1, 0, 'r'},
+	{"cluster-rainbow-table-start-offset", 1, 0, 's'},
+	{"cluster-rainbow-table-end-offset",   1, 0, 'e'},
 	{0,0,0,0}
     };
     int option_index = 0;
-
     int c;
     
     memset(&rainbow_table_path, 0, sizeof(rainbow_table_path));
@@ -1187,7 +1271,7 @@ int parseopts2(int argc, char **argv) {
 	    break;
 	case 'p':
 	    port_num = strtol(optarg,NULL,10);
-	    if (errno!=0 && port_num<0) return -1;
+	    if (errno!=0 || port_num<0) return -1;
 	    break;
 	case 'l':
 	    log_fd = open(optarg,O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
@@ -1195,11 +1279,19 @@ int parseopts2(int argc, char **argv) {
 	    break;
 	case 'c':
 	    node_count = strtol(optarg,NULL,10);
-	    if (errno!=0 && port_num<0) return -1;
+	    if (errno!=0 || node_count<0) return -1;
 	    break;	    
 	case 'r':
 	    node_rank = strtol(optarg,NULL,10);
-	    if (errno!=0 && node_rank<0) return -1;
+	    if (errno!=0 || node_rank<0) return -1;
+	    break;
+	case 's':
+	    start_offset = strtol(optarg,NULL,10);
+	    if (errno!=0 || start_offset<0) return -1;
+	    break;
+	case 'e':
+	    end_offset = strtol(optarg,NULL,10);
+	    if (errno!=0 || end_offset<0) return -1;
 	    break;
 	default:
 	    printf("incorrect argument(s)\n");
@@ -1224,9 +1316,10 @@ int main(int argc, char **argv) {
     printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
 	   PROGNAME, VER);
 
-    parseopts2(argc,argv);
-    printf("%s, %d, %d, %d, %d\n", rainbow_table_path,
-	   port_num, log_fd, node_count, node_rank);
+    parseOptsDist(argc,argv);
+    //TODO: test opts
+    printf("%s, %d, %d, %d, %d %d %d\n", rainbow_table_path,
+	   port_num, log_fd, node_count, node_rank, start_offset, end_offset);
 
     // create threads
     pthread_t comm_thread,load_thread;
@@ -1252,9 +1345,11 @@ int main(int argc, char **argv) {
     memset(&eapolkey_nomic, 0, sizeof(eapolkey_nomic));
     
     /* Collect and test command-line arguments */
+    /*
     parseopts(&opt, argc, argv);
     testopts(&opt);
     printf("\n");
+    */
     
     /* Populate capdata struct */
     strncpy(capdata.pcapfilename, opt.pcapfile,
