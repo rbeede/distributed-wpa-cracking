@@ -38,6 +38,7 @@
 #define MAX_STR_LEN 1024
 #define MAX_LOG_STR 8192
 
+#include <dirent.h>
 #include <pthread.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -1159,11 +1160,12 @@ int logMessage(int fd, const char* format, ...) {
     va_end(args);
 
     //TODO: set time zone (struct timezone - see gettimeofday man page)
+    //TODO: include timestamp output (not just seconds)
     // get timestamp to output
     gettimeofday(&log_time, 0);
 
     // format output string
-    ret = snprintf(total, sizeof(total), "%d: ", (int)log_time.tv_usec);
+    ret = snprintf(total, sizeof(total), "%d: ", log_time.tv_sec);
     if (ret<0) return -1;
     strncat(total, msg, MAX_LOG_STR);
 
@@ -1443,11 +1445,34 @@ void* listenForPacket(void* arg1) {
     }
 }
 
-void *loadRainbowTable(void *ptr) {
-    char *message;
-    message = (char*)ptr;
-    fprintf(stdout,"%s\n",message);
-    status = LOADED;
+int loadRainbowTable(char *path) {
+    //TODO: figure out what to do with currJob vs path
+    int fd;                 // file descriptor of files in directory
+    int ret;                // return value
+    DIR *dir;               // directory to search
+    struct dirent *dirent;  // directory entry
+
+    // open directory to search
+    dir = opendir(path);
+    if (dir==NULL) return -1;
+    
+    // open entries in directory
+    while ((dirent = readdir(dir))!=NULL) {
+	// ignore entries that aren't regular files
+	if (dirent->d_type != DT_REG) continue;
+	// open file
+	fd = open(dirent->d_name,O_RDONLY);
+	if (fd<0) return -1;
+	// seek to proper position
+	ret = lseek(fd, start_offset, SEEK_SET);
+	if (ret<0) return -1;
+	//TODO: do we need to do a read here???
+	printf("%s\n",dirent->d_name);
+    }
+    // close directory
+    ret = closedir(dir);
+    if (ret<0) return -1;
+
     return 0;
 }
 
@@ -1526,10 +1551,11 @@ int main(int argc, char **argv) {
     // parse arguments and test
     parseOptsDist(argc,argv);
     //TODO: test opts
-    logMessage(log_fd,"Command line arguments parsed");
+    logMessage(log_fd,"Command line arguments parsed\n");
 
     // load rainbow table into memory
-    loadRainbowTable(NULL);
+    loadRainbowTable(rainbow_table_path);
+    exit(0);
 
     // create thread for communication
     pthread_t comm_thread;
