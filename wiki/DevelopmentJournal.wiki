@@ -9,6 +9,11 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 Newest at top
 
 
+= 2011-04-09 12:00 - Rodney Beede - Code updates to master =
+
+I've updated the code so the master inspects the rainbow table files and determines the byte offsets for each worker node.  I had some trouble since a bug in Java caused files with characters in an unknown character set to be inaccessible.  I had to rename the file in question to fix this.
+
+
 = 2011-04-08 08:30 - Rodney Beede - Updates to master =
 
 Arpit wants the master code to pre-calculate the offsets needed for every worker node.  He figures this will be less work and file I/O for each worker node to have to do.  I will make the necessary code changes this weekend.
