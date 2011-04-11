@@ -36,11 +36,13 @@
 #define DOT1X_LLCTYPE "\x88\x8e"
 #define MAX_PKT_LEN 4096
 #define MAX_STR_LEN 1024
+#define MAX_LOG_STR 8192
 
 #include <pthread.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <getopt.h>
@@ -653,39 +655,75 @@ void printstats(struct timeval start, struct timeval end,
 	       "second\n", wordcount, elapsed, wordcount / elapsed);
 }
 
-int nexthashrec(FILE * fp, struct hashdb_rec *rec)
-{
+int nexthashrec(FILE * fp, struct hashdb_rec *rec) {
+    
+    int recordlength, wordlen;
+    
+    if (fread(&rec->rec_size, sizeof(rec->rec_size), 1, fp) != 1) {	
+	perror("fread");
+	return -1;
+    }
+    
+    recordlength = abs(rec->rec_size);
+    wordlen = recordlength - (sizeof(rec->pmk) + sizeof(rec->rec_size));
+    
+    if (wordlen > 63 || wordlen < 8) {
+	fprintf(stderr, "Invalid word length: %d\n", wordlen);
+	return -1;
+    }
+    
+    /* hackity, hack, hack, hack */
+    rec->word = password_buf;
+    
+    if (fread(rec->word, wordlen, 1, fp) != 1) {
+	perror("fread");
+	return -1;
+    }
+    
+    if (fread(rec->pmk, sizeof(rec->pmk), 1, fp) != 1) {
+	perror("fread");
+	return -1;
+    }
+    
+    return recordlength;
+}
 
-	int recordlength, wordlen;
+int nexthashrec_dist(int fd, struct hashdb_rec *rec) {
+    
+    int recordlength, wordlen;
 
-	if (fread(&rec->rec_size, sizeof(rec->rec_size), 1, fp) != 1) {
-	
-		perror("fread");
-		return -1;
-	}
-
-	recordlength = abs(rec->rec_size);
-	wordlen = recordlength - (sizeof(rec->pmk) + sizeof(rec->rec_size));
-
-	if (wordlen > 63 || wordlen < 8) {
-		fprintf(stderr, "Invalid word length: %d\n", wordlen);
-		return -1;
-	}
-
-	/* hackity, hack, hack, hack */
-	rec->word = password_buf;
-
-	if (fread(rec->word, wordlen, 1, fp) != 1) {
-		perror("fread");
-		return -1;
-	}
-
-	if (fread(rec->pmk, sizeof(rec->pmk), 1, fp) != 1) {
-		perror("fread");
-		return -1;
-	}
-
-	return recordlength;
+    //TODO: check errors
+    //TODO: change fprintfs to logMessages
+    read(fd, &rec->rec_size, sizeof(rec->rec_size));
+    /*if (fread(&rec->rec_size, sizeof(rec->rec_size), 1, fp) != 1) {	
+	perror("fread");
+	return -1;
+	}*/
+    
+    recordlength = abs(rec->rec_size);
+    wordlen = recordlength - (sizeof(rec->pmk) + sizeof(rec->rec_size));
+    
+    if (wordlen > 63 || wordlen < 8) {
+	fprintf(stderr, "Invalid word length: %d\n", wordlen);
+	return -1;
+    }
+    
+    /* hackity, hack, hack, hack */
+    rec->word = password_buf;
+    
+    read(fd, rec->word, wordlen);
+    /*if (fread(rec->word, wordlen, 1, fp) != 1) {
+	perror("fread");
+	return -1;
+	}*/
+    
+    read(fd, rec->pmk, sizeof(rec->pmk));
+    /*if (fread(rec->pmk, sizeof(rec->pmk), 1, fp) != 1) {
+	perror("fread");
+	return -1;
+	}*/
+    
+    return recordlength;
 }
 
 int nextdictword(char *word, FILE * fp)
@@ -718,136 +756,135 @@ void hmac_hash(int ver, u8 *key, int hashlen, u8 *buf, int buflen, u8 *mic)
 }
 
 int hashfile_attack(struct user_opt *opt, char *passphrase, 
-	struct crack_data *cdata)
-{
+		    struct crack_data *cdata) {
 	
-	FILE *fp;
-	int reclen, wordlen;
-	u8 pmk[32];
-	u8 ptk[64];
-	u8 keymic[16];
-	struct wpa_ptk *ptkset;
-	struct hashdb_rec rec;
-	struct hashdb_head hf_head;
-	char headerssid[33];
-
-	/* Open the hash file */
-	if (*opt->hashfile == '-') {
-		printf("Using STDIN for hashfile contents.\n");
-		fp = stdin;
+    FILE *fp;
+    int reclen, wordlen;
+    u8 pmk[32];
+    u8 ptk[64];
+    u8 keymic[16];
+    struct wpa_ptk *ptkset;
+    struct hashdb_rec rec;
+    struct hashdb_head hf_head;
+    char headerssid[33];
+    
+    /* Open the hash file */
+    if (*opt->hashfile == '-') {
+	printf("Using STDIN for hashfile contents.\n");
+	fp = stdin;
+    } else {
+	fp = fopen(opt->hashfile, "rb");
+	if (fp == NULL) {
+	    perror("fopen");
+	    return(-1);
+	}
+    }
+    
+    /* Read the record header contents */
+    if (fread(&hf_head, sizeof(hf_head), 1, fp) != 1) {
+	perror("fread");
+	return(-1);
+    }
+    
+    /* Ensure selected SSID matches what's stored in the header record */
+    if (memcmp(hf_head.ssid, opt->ssid, hf_head.ssidlen) != 0) {
+	
+	memcpy(&headerssid, hf_head.ssid, hf_head.ssidlen);
+	headerssid[hf_head.ssidlen] = 0; /* NULL terminate string */
+	
+	fprintf(stderr, "\nSSID in hashfile (\"%s\") does not match "
+		"SSID specified on the \n"
+		"command line (\"%s\").  You cannot "
+		"mix and match SSID's for this\nattack.\n\n",
+		headerssid, opt->ssid);
+	return(-1);
+    }
+    
+    
+    while (feof(fp) == 0 && sig == 0) {
+	
+	/* Populate the hashdb_rec with the next record */
+	reclen = nexthashrec(fp, &rec);
+	
+	/* nexthashrec returns the length of the record, test to ensure
+	   passphrase is greater than 8 characters */
+	wordlen = rec.rec_size - 
+	    (sizeof(rec.pmk) + sizeof(rec.rec_size));
+	if (wordlen < 8) {
+	    printf("Found a record that was too short, this "
+		   "shouldn't happen in practice!\n");
+	    return(-1);
+	}
+	
+	/* Populate passphrase with the record contents */
+	memcpy(passphrase, rec.word, wordlen);
+	
+	/* NULL terminate passphrase string */
+	passphrase[wordlen] = 0;
+	
+	if (opt->verbose > 1) {
+	    printf("Testing passphrase: %s\n", passphrase);
+	}
+	
+	/* Increment the words tested counter */
+	wordstested++;
+	
+	/* Status display */
+	if ((wordstested % 10000) == 0) {
+	    printf("key no. %ld: %s\n", wordstested, passphrase);
+	    fflush(stdout);
+	}
+	
+	if (opt->verbose > 1) {
+	    printf("Calculating PTK for \"%s\".\n", passphrase);
+	}
+	
+	if (opt->verbose > 2) {
+	    printf("PMK is");
+	    lamont_hdump(pmk, sizeof(pmk));
+	}
+	
+	if (opt->verbose > 1) {
+	    printf("Calculating PTK with collected data and "
+		   "PMK.\n");
+	}
+	
+	wpa_pmk_to_ptk(rec.pmk, cdata->aa, cdata->spa, cdata->anonce,
+		       cdata->snonce, ptk, sizeof(ptk));
+	
+	if (opt->verbose > 2) {
+	    printf("Calculated PTK for \"%s\" is", passphrase);
+	    lamont_hdump(ptk, sizeof(ptk));
+	}
+	
+	ptkset = (struct wpa_ptk *)ptk;
+	
+	if (opt->verbose > 1) {
+	    printf("Calculating hmac-MD5 Key MIC for this "
+		   "frame.\n");
+	}
+	
+	if (opt->nonstrict == 0) {
+	    hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
+		      sizeof(cdata->eapolframe), keymic);
 	} else {
-		fp = fopen(opt->hashfile, "rb");
-		if (fp == NULL) {
-			perror("fopen");
-			return(-1);
-		}
+	    hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
+		      cdata->eapolframe_size, keymic);
 	}
-
-	/* Read the record header contents */
-	if (fread(&hf_head, sizeof(hf_head), 1, fp) != 1) {
-		perror("fread");
-		return(-1);
+	
+	if (opt->verbose > 2) {
+	    printf("Calculated MIC with \"%s\" is", passphrase);
+	    lamont_hdump(keymic, sizeof(keymic));
 	}
-
-	/* Ensure selected SSID matches what's stored in the header record */
-	if (memcmp(hf_head.ssid, opt->ssid, hf_head.ssidlen) != 0) {
-		
-		memcpy(&headerssid, hf_head.ssid, hf_head.ssidlen);
-		headerssid[hf_head.ssidlen] = 0; /* NULL terminate string */
-
-		fprintf(stderr, "\nSSID in hashfile (\"%s\") does not match "
-			"SSID specified on the \n"
-			"command line (\"%s\").  You cannot "
-			"mix and match SSID's for this\nattack.\n\n",
-			headerssid, opt->ssid);
-		return(-1);
+	
+	if (memcmp(&cdata->keymic, &keymic, sizeof(keymic)) == 0) {
+	    return 0;
+	} else {
+	    continue;
 	}
-
-
-	while (feof(fp) == 0 && sig == 0) {
-
-		/* Populate the hashdb_rec with the next record */
-		reclen = nexthashrec(fp, &rec);
-
-		/* nexthashrec returns the length of the record, test to ensure
-		   passphrase is greater than 8 characters */
-		wordlen = rec.rec_size - 
-			(sizeof(rec.pmk) + sizeof(rec.rec_size));
-		if (wordlen < 8) {
-			printf("Found a record that was too short, this "
-				"shouldn't happen in practice!\n");
-			return(-1);
-		}
-
-		/* Populate passphrase with the record contents */
-		memcpy(passphrase, rec.word, wordlen);
-
-		/* NULL terminate passphrase string */
-		passphrase[wordlen] = 0;
-
-		if (opt->verbose > 1) {
-			printf("Testing passphrase: %s\n", passphrase);
-		}
-
-		/* Increment the words tested counter */
-		wordstested++;
-
-		/* Status display */
-		if ((wordstested % 10000) == 0) {
-			printf("key no. %ld: %s\n", wordstested, passphrase);
-			fflush(stdout);
-		}
-
-		if (opt->verbose > 1) {
-			printf("Calculating PTK for \"%s\".\n", passphrase);
-		}
-		
-		if (opt->verbose > 2) {
-			printf("PMK is");
-			lamont_hdump(pmk, sizeof(pmk));
-		}
-
-		if (opt->verbose > 1) {
-			printf("Calculating PTK with collected data and "
-			       "PMK.\n");
-		}
-
-		wpa_pmk_to_ptk(rec.pmk, cdata->aa, cdata->spa, cdata->anonce,
-			       cdata->snonce, ptk, sizeof(ptk));
-
-		if (opt->verbose > 2) {
-			printf("Calculated PTK for \"%s\" is", passphrase);
-			lamont_hdump(ptk, sizeof(ptk));
-		}
-
-		ptkset = (struct wpa_ptk *)ptk;
-
-		if (opt->verbose > 1) {
-			printf("Calculating hmac-MD5 Key MIC for this "
-			       "frame.\n");
-		}
-
-		if (opt->nonstrict == 0) {
-			hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
-				sizeof(cdata->eapolframe), keymic);
-		} else {
-			hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
-			 cdata->eapolframe_size, keymic);
-		}
-
-		if (opt->verbose > 2) {
-			printf("Calculated MIC with \"%s\" is", passphrase);
-			lamont_hdump(keymic, sizeof(keymic));
-		}
-
-		if (memcmp(&cdata->keymic, &keymic, sizeof(keymic)) == 0) {
-			return 0;
-		} else {
-			continue;
-		}
-	}
-
-	return 1;
+    }
+    
+    return 1;
 }
 
 int dictfile_attack(struct user_opt *opt, char *passphrase, 
@@ -964,6 +1001,108 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 	return 1;
 }
 
+int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
+			 struct crack_data *cdata) {
+	
+    FILE *fp;//TODO: we don't want to use stdio
+    int reclen, wordlen;
+    u8 pmk[32];
+    u8 ptk[64];
+    u8 keymic[16];
+    struct wpa_ptk *ptkset;
+    struct hashdb_rec rec;
+    
+    //TODO: hash file should be open, but check to make sure
+    //TODO: get SSID from file name (not sure if we really need it here)
+    
+    //TODO: add check to make sure we haven't gone passed this worker's
+    // allotted limit
+    while (feof(fp) == 0 && sig == 0) {
+	
+	/* Populate the hashdb_rec with the next record */
+	reclen = nexthashrec(fp, &rec);
+	
+	/* nexthashrec returns the length of the record, test to ensure
+	   passphrase is greater than 8 characters */
+	wordlen = rec.rec_size - 
+	    (sizeof(rec.pmk) + sizeof(rec.rec_size));
+	if (wordlen < 8) {
+	    printf("Found a record that was too short, this "
+		   "shouldn't happen in practice!\n");
+	    return(-1);
+	}
+	
+	/* Populate passphrase with the record contents */
+	memcpy(passphrase, rec.word, wordlen);
+	
+	/* NULL terminate passphrase string */
+	passphrase[wordlen] = 0;
+	
+	if (opt->verbose > 1) {
+	    printf("Testing passphrase: %s\n", passphrase);
+	}
+	
+	/* Increment the words tested counter */
+	wordstested++;
+	
+	/* Status display */
+	if ((wordstested % 10000) == 0) {
+	    printf("key no. %ld: %s\n", wordstested, passphrase);
+	    fflush(stdout);
+	}
+	
+	if (opt->verbose > 1) {
+	    printf("Calculating PTK for \"%s\".\n", passphrase);
+	}
+	
+	if (opt->verbose > 2) {
+	    printf("PMK is");
+	    lamont_hdump(pmk, sizeof(pmk));
+	}
+	
+	if (opt->verbose > 1) {
+	    printf("Calculating PTK with collected data and "
+		   "PMK.\n");
+	}
+	
+	wpa_pmk_to_ptk(rec.pmk, cdata->aa, cdata->spa, cdata->anonce,
+		       cdata->snonce, ptk, sizeof(ptk));
+	
+	if (opt->verbose > 2) {
+	    printf("Calculated PTK for \"%s\" is", passphrase);
+	    lamont_hdump(ptk, sizeof(ptk));
+	}
+	
+	ptkset = (struct wpa_ptk *)ptk;
+	
+	if (opt->verbose > 1) {
+	    printf("Calculating hmac-MD5 Key MIC for this "
+		   "frame.\n");
+	}
+	
+	if (opt->nonstrict == 0) {
+	    hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
+		      sizeof(cdata->eapolframe), keymic);
+	} else {
+	    hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
+		      cdata->eapolframe_size, keymic);
+	}
+	
+	if (opt->verbose > 2) {
+	    printf("Calculated MIC with \"%s\" is", passphrase);
+	    lamont_hdump(keymic, sizeof(keymic));
+	}
+	
+	if (memcmp(&cdata->keymic, &keymic, sizeof(keymic)) == 0) {
+	    return 0;
+	} else {
+	    continue;
+	}
+    }
+    
+    return 1;
+}
+
 int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 
     char buffer[MAX_STR_LEN],packet[MAX_PKT_LEN];
@@ -1000,7 +1139,46 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 
 }
 
+/*
+ * Writes a log message to a file.  A timestamp is written along with the 
+ * message.  The file should be previously opened in append mode.
+ *  fd     - file descriptor of file to write to
+ *  format - format string
+ */
+int logMessage(int fd, const char* format, ...) {
+
+    int ret;                   // return value
+    char msg[MAX_LOG_STR];     // message to log
+    char total[MAX_LOG_STR];   // total buffer to output
+    va_list args;              // arguments from formatted string
+    struct timeval log_time;   // timestamp to output with message
+
+    // turn parameters into a character string
+    va_start(args,format);
+    vsnprintf(msg,MAX_LOG_STR,format,args);
+    va_end(args);
+
+    //TODO: set time zone (struct timezone - see gettimeofday man page)
+    // get timestamp to output
+    gettimeofday(&log_time, 0);
+
+    // format output string
+    ret = snprintf(total, sizeof(total), "%d: ", (int)log_time.tv_usec);
+    if (ret<0) return -1;
+    strncat(total, msg, MAX_LOG_STR);
+
+    // write buffer and flush
+    ret = write(fd, &total, sizeof(total));
+    if (ret<0) return -1;
+    ret = fsync(fd);
+    if (ret<0) return -1;
+
+    return 0;
+}
+
 void* getCracking(void* arg) {
+
+    //TODO: manage errors and exits differently (communicate)
 
     struct user_opt opt;
     struct crack_data cdata;
@@ -1011,11 +1189,10 @@ void* getCracking(void* arg) {
     int ret;
     char passphrase[MAXPASSLEN + 1];
 
-    //TODO: manage errors and exits differently (communicate)
-    printf("hello from thread\n");
-
-    memset(&capdata, 0, sizeof(struct capture_data));
-    memset(&cdata, 0, sizeof(struct crack_data));
+    // clear structs
+    memset(&opt,            0, sizeof(struct user_opt));
+    memset(&capdata,        0, sizeof(struct capture_data));
+    memset(&cdata,          0, sizeof(struct crack_data));
     memset(&eapolkey_nomic, 0, sizeof(eapolkey_nomic));
     
     /* Populate capdata struct */
@@ -1081,8 +1258,36 @@ void* getCracking(void* arg) {
 	eapkeypacket->key_data_length = 0;
     }
     
-    printf("Starting dictionary attack.  Please be patient.\n");
-    fflush(stdout);
+    //printf("Starting dictionary attack.  Please be patient.\n");
+    //fflush(stdout);
+
+    gettimeofday(&start, 0);
+    
+    if (!IsBlank(opt.hashfile)) {
+	ret = hashfile_attack(&opt, passphrase, &cdata);
+    } else if (!IsBlank(opt.dictfile)) {
+	ret = dictfile_attack(&opt, passphrase, &cdata);
+    } else {
+	usage("Must specify dictfile or hashfile (-f or -d)");
+	exit(-1);
+    }
+    
+    if (ret == 0) {
+	printf("\nThe PSK is \"%s\".\n", passphrase);
+	gettimeofday(&end, 0);
+	printstats(start, end, wordstested);
+	return 0;
+    } else {
+	printf("Unable to identify the PSK from the dictionary file. " 
+	       "Try expanding your\npassphrase list, and double-check"
+	       " the SSID.  Sorry it didn't work out.\n");
+	gettimeofday(&end, 0);
+	printstats(start, end, wordstested);
+	return 1;
+    }
+
+
+
     
     status = FINISHED;
     pthread_exit(NULL);
@@ -1249,13 +1454,16 @@ void *loadRainbowTable(void *ptr) {
 int parseOptsDist(int argc, char **argv) {
 
     static struct option long_options[] = {
-	{"cluster-rainbow-table",              1, 0, 't'},
-	{"cluster-port",                       1, 0, 'p'},
-	{"cluster-log",                        1, 0, 'l'},
-	{"cluster-node-count",                 1, 0, 'c'},
-	{"cluster-node-rank",                  1, 0, 'r'},
-	{"cluster-rainbow-table-start-offset", 1, 0, 's'},
-	{"cluster-rainbow-table-end-offset",   1, 0, 'e'},
+	{"cluster-port",                         1, 0, 'p'},
+	{"cluster-rainbow-table",                1, 0, 't'},
+	{"cluster-rainbow-table-start-offset",   1, 0, 's'},
+	{"cluster-rainbow-table-end-offset",     1, 0, 'e'},
+	{"cluster-log",                          1, 0, 'l'},
+	{"cluster-rainbow-table-number-records", 1, 0, 'n'},
+	{"cluster-rainbow-table-record-start",   1, 0, 'a'},
+	{"cluster-rainbow-table-record-end",     1, 0, 'd'},
+	{"cluster-node-count",                   1, 0, 'c'},
+	{"cluster-node-rank",                    1, 0, 'r'},
 	{0,0,0,0}
     };
     int option_index = 0;
@@ -1263,27 +1471,15 @@ int parseOptsDist(int argc, char **argv) {
     
     memset(&rainbow_table_path, 0, sizeof(rainbow_table_path));
 
-    while ((c = getopt_long(argc, argv, "t:p:l:c:r:",long_options, 
+    while ((c = getopt_long(argc, argv, "p:t:s:e:l:n:a:d:c:r:",long_options, 
 			    &option_index)) != EOF) {
 	switch (c) {
-	case 't':
-	    strncpy(rainbow_table_path, optarg, sizeof(rainbow_table_path));
-	    break;
 	case 'p':
 	    port_num = strtol(optarg,NULL,10);
 	    if (errno!=0 || port_num<0) return -1;
 	    break;
-	case 'l':
-	    log_fd = open(optarg,O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
-	    if (log_fd<0) return -1;
-	    break;
-	case 'c':
-	    node_count = strtol(optarg,NULL,10);
-	    if (errno!=0 || node_count<0) return -1;
-	    break;	    
-	case 'r':
-	    node_rank = strtol(optarg,NULL,10);
-	    if (errno!=0 || node_rank<0) return -1;
+	case 't':
+	    strncpy(rainbow_table_path, optarg, sizeof(rainbow_table_path));
 	    break;
 	case 's':
 	    start_offset = strtol(optarg,NULL,10);
@@ -1293,6 +1489,27 @@ int parseOptsDist(int argc, char **argv) {
 	    end_offset = strtol(optarg,NULL,10);
 	    if (errno!=0 || end_offset<0) return -1;
 	    break;
+	case 'l':
+	    log_fd = open(optarg,O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+	    if (log_fd<0) return -1;
+	    break;
+	case 'n':
+	    //TODO: fill this in
+	    break;
+	case 'a':
+	    //TODO: fill this in
+	    break;
+	case 'd':
+	    //TODO: fill this in
+	    break;
+	case 'c':
+	    node_count = strtol(optarg,NULL,10);
+	    if (errno!=0 || node_count<0) return -1;
+	    break;	    
+	case 'r':
+	    node_rank = strtol(optarg,NULL,10);
+	    if (errno!=0 || node_rank<0) return -1;
+	    break;
 	default:
 	    printf("incorrect argument(s)\n");
 	    return -1;
@@ -1301,9 +1518,34 @@ int parseOptsDist(int argc, char **argv) {
     return 0;
 }
 
-
 int main(int argc, char **argv) {
     
+    printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
+	   PROGNAME, VER);
+
+    // parse arguments and test
+    parseOptsDist(argc,argv);
+    //TODO: test opts
+    logMessage(log_fd,"Command line arguments parsed");
+
+    // load rainbow table into memory
+    loadRainbowTable(NULL);
+
+    // create thread for communication
+    pthread_t comm_thread;
+    int ret = pthread_create(&comm_thread,NULL,listenForPacket,NULL);
+    if (ret!=0) {
+	logMessage(log_fd,"Failed to create communication thread\n");
+	exit(EXIT_FAILURE);
+    }
+    //TODO: possibly register clean up calls
+
+    // exit when comm thread finishes
+    pthread_join(comm_thread,NULL);
+    exit(EXIT_SUCCESS);
+
+    // old cowpatty main code
+    /*
     struct user_opt opt;
     struct crack_data cdata;
     struct capture_data capdata;
@@ -1313,45 +1555,17 @@ int main(int argc, char **argv) {
     int ret;
     char passphrase[MAXPASSLEN + 1];
     
-    printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
-	   PROGNAME, VER);
-
-    parseOptsDist(argc,argv);
-    //TODO: test opts
-    printf("%s, %d, %d, %d, %d %d %d\n", rainbow_table_path,
-	   port_num, log_fd, node_count, node_rank, start_offset, end_offset);
-
-    // create threads
-    pthread_t comm_thread,load_thread;
-    int commRet,loadRet;
-    char *msg2 = "thread: load";
-    loadRainbowTable((void*) msg2);
-    commRet = pthread_create(&comm_thread,NULL,listenForPacket,(void*)8080);
-    //TODO: possibly register clean up calls
-    //loadRet = pthread_create(&load_thread,NULL,loadRainbowTable,(void*)msg2);
-
-    // comm thread
-    pthread_join(comm_thread,NULL);
-
-    printf("listen thread: %d\n",commRet);
-    printf("load thread: %d\n",commRet);
-    exit(0);
-
-    //TODO: we don't want to reach this part yet
-
     memset(&opt, 0, sizeof(struct user_opt));
     memset(&capdata, 0, sizeof(struct capture_data));
     memset(&cdata, 0, sizeof(struct crack_data));
     memset(&eapolkey_nomic, 0, sizeof(eapolkey_nomic));
     
-    /* Collect and test command-line arguments */
-    /*
+    // Collect and test command-line arguments
     parseopts(&opt, argc, argv);
     testopts(&opt);
     printf("\n");
-    */
     
-    /* Populate capdata struct */
+    // Populate capdata struct
     strncpy(capdata.pcapfilename, opt.pcapfile,
             sizeof(capdata.pcapfilename));
     if (openpcap(&capdata) != 0) {
@@ -1359,21 +1573,21 @@ int main(int argc, char **argv) {
 	exit(-1);
     }
     
-    /* populates global *packet */
+    // populates global *packet
     while (getpacket(&capdata) > 0) {
 	if (opt.verbose > 2) {
 	    lamont_hdump(packet, h->len);
 	}
-	/* test packet for data that we are looking for */
+	// test packet for data that we are looking for
 	if (memcmp(&packet[capdata.l2type_offset], DOT1X_LLCTYPE, 2) ==
 	    0 && (h->len >
 		  capdata.l2type_offset + sizeof(struct wpa_eapol_key))) {
-	    /* It's a dot1x frame, process it */
+	    // It's a dot1x frame, process it
 	    handle_dot1x(&cdata, &capdata, &opt);
 	    if (cdata.aaset && cdata.spaset && cdata.snonceset &&
 		cdata.anonceset && cdata.keymicset
 		&& cdata.eapolframeset) {
-		/* We've collected everything we need. */
+		// We've collected everything we need.
 		break;
 	    }
 	}
@@ -1401,11 +1615,11 @@ int main(int argc, char **argv) {
     }
     
     if (opt.checkonly) {
-	/* Don't attack the PSK, just return non-error return code */
+	// Don't attack the PSK, just return non-error return code
 	return 0;
     }
     
-    /* Zero mic and length data for hmac-md5 calculation */
+    // Zero mic and length data for hmac-md5 calculation
     eapkeypacket =
 	(struct wpa_eapol_key *)&cdata.eapolframe[EAPDOT1XOFFSET];
     memset(&eapkeypacket->key_mic, 0, sizeof(eapkeypacket->key_mic));
@@ -1446,5 +1660,5 @@ int main(int argc, char **argv) {
     }
     
     return 1;
-    
+    */
 }

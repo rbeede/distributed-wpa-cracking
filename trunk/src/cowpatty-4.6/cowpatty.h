@@ -132,67 +132,67 @@ struct wpa_eapol_key {
 } __attribute__ ((packed));
 
 struct wpa_ptk {
-	u8 mic_key[16];		/* EAPOL-Key MIC Key (MK) */
-	u8 encr_key[16];	/* EAPOL-Key Encryption Key (EK) */
-	u8 tk1[16];		/* Temporal Key 1 (TK1) */
-	union {
-		u8 tk2[16];	/* Temporal Key 2 (TK2) */
-		struct {
-			u8 tx_mic_key[8];
-			u8 rx_mic_key[8];
-		} auth;
-	} u;
+    u8 mic_key[16];	/* EAPOL-Key MIC Key (MK) */
+    u8 encr_key[16];	/* EAPOL-Key Encryption Key (EK) */
+    u8 tk1[16];		/* Temporal Key 1 (TK1) */
+    union {
+	u8 tk2[16];	/* Temporal Key 2 (TK2) */
+	struct {
+	    u8 tx_mic_key[8];
+	    u8 rx_mic_key[8];
+	} auth;
+    } u;
 } __attribute__ ((packed));
 
 struct user_opt {
-	char ssid[256];
-	char dictfile[256];
-	char pcapfile[256];
-	char hashfile[256];
-	u8 nonstrict;
+    char ssid[256];
+    char dictfile[256];
+    char pcapfile[256];
+    char hashfile[256];
+    u8 nonstrict;
     u8 checkonly;
-	u8 verbose;
+    u8 verbose;
     u8 unused;
 };
 
 struct capture_data {
-	char pcapfilename[256];
-	int pcaptype;
-	int dot1x_offset;
-	int l2type_offset;
-	int dstmac_offset;
-	int srcmac_offset;
+    char pcapfilename[256];
+    int pcaptype;
+    int dot1x_offset;
+    int l2type_offset;
+    int dstmac_offset;
+    int srcmac_offset;
 };
 
 struct crack_data {
-	u8 aa[6];
-	u8 spa[6];
-	u8 snonce[32];
-	u8 anonce[32];
-	u8 eapolframe[99];
-	u8 eapolframe2[125];
-	u8 keymic[16];
-	u8 aaset;
-	u8 spaset;
-	u8 snonceset;
-	u8 anonceset;
-	u8 keymicset;
-	u8 eapolframeset;
-	u8 replay_counter[8];
-
-	int ver; /* Hashing algo, MD5 or AES-CBC-MAC */
-	int eapolframe_size;
+    u8 aa[6];
+    u8 spa[6];
+    u8 snonce[32];
+    u8 anonce[32];
+    u8 eapolframe[99];
+    u8 eapolframe2[125];
+    u8 keymic[16];
+    u8 aaset;
+    u8 spaset;
+    u8 snonceset;
+    u8 anonceset;
+    u8 keymicset;
+    u8 eapolframeset;
+    u8 replay_counter[8];
+    
+    int ver; /* Hashing algo, MD5 or AES-CBC-MAC */
+    int eapolframe_size;
 };
 
 struct hashdb_head {
-	uint32_t magic;
-	uint8_t reserved1[3];
-	uint8_t ssidlen;
-	uint8_t ssid[32];
+    uint32_t magic;
+    uint8_t reserved1[3];
+    uint8_t ssidlen;
+    uint8_t ssid[32];
 };
 
 struct hashdb_rec {
-	uint8_t rec_size;
-	char *word;
-	uint8_t pmk[32];
+    uint8_t rec_size;
+    char *word;
+    uint8_t pmk[32];
 } __attribute__ ((packed));
