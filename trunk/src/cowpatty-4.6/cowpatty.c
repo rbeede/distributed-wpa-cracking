@@ -86,6 +86,7 @@ int node_count;
 int node_rank;
 int start_offset;
 int end_offset;
+char **rainbow_table;
 
 struct job {
     char jobid[MAX_STR_LEN];
@@ -1002,6 +1003,7 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 	return 1;
 }
 
+//TODO: this needs lots of work
 int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
 			 struct crack_data *cdata) {
 	
@@ -1165,7 +1167,7 @@ int logMessage(int fd, const char* format, ...) {
     gettimeofday(&log_time, 0);
 
     // format output string
-    ret = snprintf(total, sizeof(total), "%d: ", log_time.tv_sec);
+    ret = snprintf(total, sizeof(total), "%d: ", (int)log_time.tv_sec);
     if (ret<0) return -1;
     strncat(total, msg, MAX_LOG_STR);
 
@@ -1449,6 +1451,7 @@ int loadRainbowTable(char *path) {
     //TODO: figure out what to do with currJob vs path
     int fd;                 // file descriptor of files in directory
     int ret;                // return value
+    int count;              // number of files to read through
     DIR *dir;               // directory to search
     struct dirent *dirent;  // directory entry
 
@@ -1456,18 +1459,57 @@ int loadRainbowTable(char *path) {
     dir = opendir(path);
     if (dir==NULL) return -1;
     
+    // count the number of files to read
+    count=0;
+    while ((dirent = readdir(dir))!=NULL) {
+	// ignore entries that aren't regular files
+	if (dirent->d_type != DT_REG) continue;
+	count++;
+    }
+
+    // rewind dirent pointer to beginning
+    rewinddir(dir);
+
+    // allocate memory for pointers to file chunks
+    rainbow_table = (char**)malloc(count*sizeof(char*));
+    if (rainbow_table==NULL) return -1;
+
+    //TODO: change 256 to something intelligent
+    char temp_path[256];
+    int index=0;
+
     // open entries in directory
     while ((dirent = readdir(dir))!=NULL) {
 	// ignore entries that aren't regular files
 	if (dirent->d_type != DT_REG) continue;
+
+	// create path to file
+	memset(temp_path,0,256);
+	snprintf(temp_path,256,"%s/%s",path,dirent->d_name);
+
 	// open file
-	fd = open(dirent->d_name,O_RDONLY);
+	fd = open(temp_path,O_RDONLY);
 	if (fd<0) return -1;
+
 	// seek to proper position
 	ret = lseek(fd, start_offset, SEEK_SET);
 	if (ret<0) return -1;
-	//TODO: do we need to do a read here???
-	printf("%s\n",dirent->d_name);
+
+	// read in chunk of file
+	//TODO: clean this up
+	size_t len = end_offset-start_offset+1;
+	char *buffer = (char*)malloc(len*sizeof(char));
+	if (buffer==NULL) return -1;
+	ret = read(fd, buffer, len);
+	//TODO: check number of bytes actually read
+	if (ret<0) return -1;
+	rainbow_table[index] = buffer;
+	
+	// close file
+	ret = close(fd);
+	if (ret<0) return -1;
+
+	index++;
     }
     // close directory
     ret = closedir(dir);
@@ -1554,12 +1596,15 @@ int main(int argc, char **argv) {
     logMessage(log_fd,"Command line arguments parsed\n");
 
     // load rainbow table into memory
-    loadRainbowTable(rainbow_table_path);
+    int ret = loadRainbowTable(rainbow_table_path);
+    if (ret<0) logMessage(log_fd,"Unable to load rainbow table\n");
+    logMessage(log_fd,"Rainbow table loaded\n");
     exit(0);
+    //just testing loadRainbowTable for now
 
     // create thread for communication
     pthread_t comm_thread;
-    int ret = pthread_create(&comm_thread,NULL,listenForPacket,NULL);
+    ret = pthread_create(&comm_thread,NULL,listenForPacket,NULL);
     if (ret!=0) {
 	logMessage(log_fd,"Failed to create communication thread\n");
 	exit(EXIT_FAILURE);
