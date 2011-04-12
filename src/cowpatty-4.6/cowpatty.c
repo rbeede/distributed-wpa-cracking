@@ -1156,6 +1156,10 @@ int logMessage(int fd, const char* format, ...) {
     va_list args;              // arguments from formatted string
     struct timeval log_time;   // timestamp to output with message
 
+    // clear memory
+    memset(msg,0,MAX_LOG_STR);
+    memset(total,0,MAX_LOG_STR);
+
     // turn parameters into a character string
     va_start(args,format);
     vsnprintf(msg,MAX_LOG_STR,format,args);
@@ -1597,10 +1601,20 @@ int main(int argc, char **argv) {
 
     // load rainbow table into memory
     int ret = loadRainbowTable(rainbow_table_path);
-    if (ret<0) logMessage(log_fd,"Unable to load rainbow table\n");
-    logMessage(log_fd,"Rainbow table loaded\n");
-    exit(0);
-    //just testing loadRainbowTable for now
+    if (ret<0) {
+	logMessage(log_fd,"Unable to load rainbow table\n");
+        exit(EXIT_FAILURE);
+    } else {
+	status = LOADED;
+	logMessage(log_fd,"Rainbow table loaded\n");
+    }
+
+    /*
+    int i;
+    for (i=0; i<4; i++) {
+	printf("%s\n", rainbow_table[i]);
+    }
+    */
 
     // create thread for communication
     pthread_t comm_thread;
