@@ -8,6 +8,13 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+= 2011-04-10 17:00 - Ryan Kroiss - Loading rainbow table = 
+
+Started loading rainbow table into memory.
+
+= 2011-04-10 13:00 - Ryan Kroiss - Log messages = 
+
+Wrote function to log message to a file.  It handles varying arguments.
 
 = 2011-04-09 12:00 - Rodney Beede - Code updates to master =
 
