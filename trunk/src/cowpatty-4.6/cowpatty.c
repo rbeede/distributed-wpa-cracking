@@ -86,6 +86,7 @@ int node_count;
 int node_rank;
 int start_offset;
 int end_offset;
+int num_ssid;
 char **rainbow_table;
 
 struct job {
@@ -1005,7 +1006,7 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 
 //TODO: this needs lots of work
 int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
-			 struct crack_data *cdata) {
+			 struct crack_data *cdata,char *raint) {
 	
     FILE *fp;//TODO: we don't want to use stdio
     int reclen, wordlen;
@@ -1203,7 +1204,7 @@ void* getCracking(void* arg) {
     memset(&cdata,          0, sizeof(struct crack_data));
     memset(&eapolkey_nomic, 0, sizeof(eapolkey_nomic));
     
-    /* Populate capdata struct */
+    // Populate capdata struct
     //TODO: check on these sizes
     strncpy(capdata.pcapfilename, currJob.capture_path,
             sizeof(capdata.pcapfilename));
@@ -1211,6 +1212,8 @@ void* getCracking(void* arg) {
 	printf("Unsupported or unrecognized pcap file.\n");
 	exit(-1);
     }
+
+    //TODO: opt.verbose,opt.checkonly, opt.nonstrict will default to 0
     
     /* populates global *packet */
     while (getpacket(&capdata) > 0) {
@@ -1271,31 +1274,19 @@ void* getCracking(void* arg) {
 
     gettimeofday(&start, 0);
     
-    if (!IsBlank(opt.hashfile)) {
-	ret = hashfile_attack(&opt, passphrase, &cdata);
-    } else if (!IsBlank(opt.dictfile)) {
-	ret = dictfile_attack(&opt, passphrase, &cdata);
-    } else {
-	usage("Must specify dictfile or hashfile (-f or -d)");
-	exit(-1);
+    int i;
+    for (i=0; i<num_ssid; i++) {
+	ret = hashfile_attack_dist(&opt,passphrase,&cdata,rainbow_table[i]);
+	if (ret==0) {
+	    //SOLUTION found
+	    //printf("\nThe PSK is \"%s\".\n", passphrase);
+	    break;
+	}
     }
-    
-    if (ret == 0) {
-	printf("\nThe PSK is \"%s\".\n", passphrase);
-	gettimeofday(&end, 0);
-	printstats(start, end, wordstested);
-	return 0;
-    } else {
-	printf("Unable to identify the PSK from the dictionary file. " 
-	       "Try expanding your\npassphrase list, and double-check"
-	       " the SSID.  Sorry it didn't work out.\n");
-	gettimeofday(&end, 0);
-	printstats(start, end, wordstested);
-	return 1;
+    gettimeofday(&end, 0);
+    if (ret!=0) {
+	//SOLUTION not found
     }
-
-
-
     
     status = FINISHED;
     pthread_exit(NULL);
@@ -1311,7 +1302,10 @@ int processConnection(int master_socket_fd) {
 
     // read packet
     len = read(master_socket_fd, buffer, MAX_PKT_LEN);
-    if (len < 0) fatal("Error while reading from socket");
+    if (len < 0) {
+	logMessage(log_fd,"Error while reading from socket\n");
+	return -1;
+    }
 
     int i;            // for loop counter
     int sub_i=0;      // index into sub buffer
@@ -1331,10 +1325,8 @@ int processConnection(int master_socket_fd) {
     // parse packet
     for (i=0; i<len; i++) {
 	if (buffer[i] == '\4') {
-	    fprintf(stdout, "MESSAGE     : %s\n",message);
-	    fprintf(stdout, "JOB ID      : %s\n",jobid);
-	    fprintf(stdout, "CAPTURE PATH: %s\n",capture_path);
-	    fprintf(stdout, "OUTPUT PATH : %s\n",output_path);
+	    logMessage(log_fd,"RECEIVED: %s %s %s $s\n",
+		       message, jobid, capture_path, output_path);
 	    break;
 	} else if (buffer[i] == '\31') {
 	    sub_i = 0;
@@ -1352,18 +1344,25 @@ int processConnection(int master_socket_fd) {
     }
 
     if (strcmp(message,"START")==0) {
-	//TODO: check if a job is running
-	
-
-
-
+	// check if a job is running
+	if (status==RUNNING) {
+	    sendPacket(master_socket_fd,"ERROR",
+		       "Another job is still running",NULL);
+	    return 0;
+	}
+	// clear memory
 	memset(&currJob,0,sizeof(struct job));
 	memcpy(&currJob.jobid, &jobid, MAX_STR_LEN);
 	memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
 	memcpy(&currJob.output_path, &output_path, MAX_STR_LEN);
-	//TODO: check return value
-	pthread_create(&currJob.thread,NULL,getCracking,NULL);
-	//TODO: start new thread that does work
+	// start worker thread
+	int ret = pthread_create(&currJob.thread,NULL,getCracking,NULL);
+	if (ret<0) {
+	    sendPacket(master_socket_fd,"ERROR",
+		       "Unable to create thread to perform work",NULL);
+	    return 0;
+	}
+	// job started successfully
 	status = RUNNING;
 	sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
     } else if (strcmp(message,"STATUS")==0) {
@@ -1383,20 +1382,17 @@ int processConnection(int master_socket_fd) {
 	default: break;
 	}
     } else if (strcmp(message,"KILLJOB")==0) {
-	//TODO: check that currJob is valid
-	//if (currJob!=NULL) {
-	    int ret = pthread_cancel(currJob.thread);
-	    if (ret == 0) {
-		status = KILLED;
-		sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
-	    } else if (errno == ESRCH) {
-		//TODO: this may mean that the job finished already
-		sendPacket(master_socket_fd,"ERROR","No such job exists",NULL);
-	    } else {
-		sendPacket(master_socket_fd,"ERROR",
-			   "Kill command failed for unknown reason",NULL);
-	    }
-	    //}
+	int ret = pthread_cancel(currJob.thread);
+	if (ret == 0) {
+	    status = KILLED;
+	    sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+	} else if (errno == ESRCH) {
+	    //TODO: this may mean that the job finished already
+	    sendPacket(master_socket_fd,"ERROR","No such job exists",NULL);
+	} else {
+	    sendPacket(master_socket_fd,"ERROR",
+		       "Kill command failed for unknown reason",NULL);
+	}
     }
 
     return 0;
@@ -1404,21 +1400,23 @@ int processConnection(int master_socket_fd) {
 
 void* listenForPacket(void* arg1) {
 
-    int portNum = (int)arg1;
+    int ret;
     int worker_socket_fd,master_socket_fd;
     struct sockaddr_in worker_addr,master_addr;
     socklen_t master_len;
 
     // create socket using IPv4 protocol
     worker_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (worker_socket_fd < 0)
-	fatal("Unable to open socket\n");
+    if (worker_socket_fd < 0) {
+	logMessage(log_fd,"Unable to open socket\n");
+	return NULL;
+    }
 
     // set up address for socket
     memset(&worker_addr, 0, sizeof(worker_addr));
     worker_addr.sin_family = AF_INET;
     worker_addr.sin_addr.s_addr = INADDR_ANY;
-    worker_addr.sin_port = htons(portNum);
+    worker_addr.sin_port = htons(port_num);
 
     // bind address to socket
     if (bind(worker_socket_fd, (struct sockaddr *) &worker_addr,
@@ -1426,7 +1424,6 @@ void* listenForPacket(void* arg1) {
 	fatal("Unable to bind address to socket\n");
 
     // set up socket to listen
-    //TODO: not sure about backlog (2nd param)
     listen(worker_socket_fd, 0);
     
     // init size of master address
@@ -1436,18 +1433,20 @@ void* listenForPacket(void* arg1) {
     // defense against zombies
     signal(SIGCHLD, SIG_IGN);
 
-    int ret;
     // loop until we receive a packet
     while(1) {
 	// accept connection from some client
 	master_socket_fd = accept(worker_socket_fd,
 				  (struct sockaddr *) &master_addr,
 				  &master_len);
-	if (master_socket_fd < 0) fatal("Error occurred on accept\n");
+	if (master_socket_fd < 0) 
+	    logMessage(log_fd,"Error occurred on accept\n");
 
+	// process connection from master
 	ret = processConnection(master_socket_fd);
-	//TODO: close connections when finished
-	
+	// close connection
+	ret = close(master_socket_fd);
+	if (ret<0) logMessage(log_fd,"Unable to close connection\n");
     }
 }
 
@@ -1519,7 +1518,7 @@ int loadRainbowTable(char *path) {
     ret = closedir(dir);
     if (ret<0) return -1;
 
-    return 0;
+    return count;
 }
 
 int parseOptsDist(int argc, char **argv) {
@@ -1608,13 +1607,13 @@ int main(int argc, char **argv) {
 	status = LOADED;
 	logMessage(log_fd,"Rainbow table loaded\n");
     }
+    num_ssid = ret;
 
     /*
     int i;
-    for (i=0; i<4; i++) {
+    for (i=0; i<ret; i++) {
 	printf("%s\n", rainbow_table[i]);
-    }
-    */
+    }*/
 
     // create thread for communication
     pthread_t comm_thread;
