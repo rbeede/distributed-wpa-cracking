@@ -87,7 +87,13 @@ public class Job implements Runnable {
 				} else if(state.contains("ERROR")) {
 					this.setState(JobState.Error);
 					log.error(state);
-					this.result = state;
+					this.result = "ERROR";
+					return;
+				} else if(!state.contains("RUNNING")) {
+					// Possible that worker nodes have reset
+					this.setState(JobState.Error);
+					log.error("Job " + this.getId() + " expected worker node to be in state RUNNING but instead found it in state " + state);
+					this.result = "ERROR";
 					return;
 				}
 			}
