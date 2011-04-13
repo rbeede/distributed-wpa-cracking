@@ -8,6 +8,11 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+= 2011-04-13 17:14 - Rodney Beede - Fixed master web app =
+
+Bug in code was closing TCP socket too soon.  Fixed so master app works correctly when interacting with worker nodes.
+
+
 = 2011-04-12 23:20 - Ryan Kroiss - Initial tests =
 
 I started doing some testing using the web app.  Right now, there are still some kinks to work out.  The workers appear to get the STATUS messages, but it doesn't seem like the master is hearing from them.  We'll have to figure out which side is having the problem.  It might be an issue with the worker not trying to reestablish the connection if master is closing the connection after each message.
