@@ -1172,12 +1172,12 @@ int logMessage(int fd, const char* format, ...) {
     gettimeofday(&log_time, 0);
 
     // format output string
-    ret = snprintf(total, sizeof(total), "%d: ", (int)log_time.tv_sec);
+    ret = snprintf(total, MAX_LOG_STR, "%d: ", (int)log_time.tv_sec);
     if (ret<0) return -1;
-    strncat(total, msg, MAX_LOG_STR);
+    strncat(total, msg, MAX_LOG_STR-ret);
 
     // write buffer and flush
-    ret = write(fd, &total, sizeof(total));
+    ret = write(fd, total, strlen(total));
     if (ret<0) return -1;
     ret = fsync(fd);
     if (ret<0) return -1;
@@ -1563,7 +1563,9 @@ int parseOptsDist(int argc, char **argv) {
 	    if (errno!=0 || end_offset<0) return -1;
 	    break;
 	case 'l':
-	    log_fd = open(optarg,O_CREAT|O_APPEND,S_IRUSR|S_IWUSR);
+	    printf("optarg: %s\n", optarg);
+	    log_fd = open(optarg,O_RDWR|O_CREAT|O_APPEND,
+			  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 	    if (log_fd<0) return -1;
 	    break;
 	case 'n':
