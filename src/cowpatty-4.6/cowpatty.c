@@ -1156,7 +1156,6 @@ int logMessage(int fd, const char* format, ...) {
     char msg[MAX_LOG_STR];     // message to log
     char total[MAX_LOG_STR];   // total buffer to output
     va_list args;              // arguments from formatted string
-    struct timeval log_time;   // timestamp to output with message
 
     // clear memory
     memset(msg,0,MAX_LOG_STR);
@@ -1171,7 +1170,7 @@ int logMessage(int fd, const char* format, ...) {
 	// Get the current time so we can output it in the log as a nicely formatted one :)
 	time_t rawtime;
 	time (&rawtime);
-	tm * ptm;
+	struct tm * ptm;
 	ptm = gmtime (&rawtime);  // No messing with time zones and daylight savings time
 	
 	char currTimeFormatted[26];  // sizeof(currTimeFormatted) works on this since it isn't a pointer to a malloc
