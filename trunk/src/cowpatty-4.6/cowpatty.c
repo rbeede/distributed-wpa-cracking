@@ -54,6 +54,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
+#include <time.h>
 
 #include "cowpatty.h"
 #include "common.h"
