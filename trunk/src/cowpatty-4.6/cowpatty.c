@@ -1171,7 +1171,8 @@ int logMessage(int fd, const char* format, ...) {
 	// Get the current time so we can output it in the log as a nicely formatted one :)
 	time_t rawtime;
 	time (&rawtime);
-	tm * ptm = gmtime (&rawtime);  // No messing with time zones and daylight savings time
+	tm * ptm;
+	ptm = gmtime (&rawtime);  // No messing with time zones and daylight savings time
 	
 	char currTimeFormatted[26];  // sizeof(currTimeFormatted) works on this since it isn't a pointer to a malloc
 	// format comes out with 0 padded numbers and looks like:  "YYYY-mm-dd HH:MM:SS +0000" or "YYYY-mm-dd HH:MM:SS -0000"
