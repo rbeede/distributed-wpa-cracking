@@ -183,8 +183,12 @@ public class WorkerNodeManager {
 		int offset = 0;
 		for(int i = 0; i < buffer.length; i++) {
 			if('\31' == buffer[i]) {
-				// part should include '\0' from buffer, but it buffer is incorrect Java still handles the string termination
-				final String part = new String(buffer, offset, i - offset, GlobalConstants.UTF8);
+				// part should include '\0' from buffer, but if buffer is incorrect Java still handles the string termination
+				String part = new String(buffer, offset, i - offset, GlobalConstants.UTF8);
+				
+				// Strip out any control chars or \0 since we don't want those displayed
+				part = part.replace("\0", "");
+				part = part.replace("\4", "");
 				
 				responseParts.add(part);
 				
