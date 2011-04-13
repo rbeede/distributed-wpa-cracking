@@ -1008,7 +1008,7 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
 			 struct crack_data *cdata,char *raint) {
 	
-    FILE *fp;//TODO: we don't want to use stdio
+    FILE* fp;
     int reclen, wordlen;
     u8 pmk[32];
     u8 ptk[64];
@@ -1016,15 +1016,15 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
     struct wpa_ptk *ptkset;
     struct hashdb_rec rec;
     
-    //TODO: hash file should be open, but check to make sure
     //TODO: get SSID from file name (not sure if we really need it here)
     
     //TODO: add check to make sure we haven't gone passed this worker's
     // allotted limit
-    while (feof(fp) == 0 && sig == 0) {
+    int i;
+    while (i<(end_offset-start_offset+1)) {
 	
 	/* Populate the hashdb_rec with the next record */
-	reclen = nexthashrec(fp, &rec);
+	reclen = nexthashrec_dist(fp, &rec);
 	
 	/* nexthashrec returns the length of the record, test to ensure
 	   passphrase is greater than 8 characters */
@@ -1355,6 +1355,7 @@ int processConnection(int master_socket_fd) {
 	memcpy(&currJob.jobid, &jobid, MAX_STR_LEN);
 	memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
 	memcpy(&currJob.output_path, &output_path, MAX_STR_LEN);
+	/*
 	// start worker thread
 	int ret = pthread_create(&currJob.thread,NULL,getCracking,NULL);
 	if (ret<0) {
@@ -1362,6 +1363,8 @@ int processConnection(int master_socket_fd) {
 		       "Unable to create thread to perform work",NULL);
 	    return 0;
 	}
+	*/
+	logMessage(log_fd,"Job started\n");
 	// job started successfully
 	status = RUNNING;
 	sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
@@ -1613,7 +1616,9 @@ int main(int argc, char **argv) {
     int i;
     for (i=0; i<ret; i++) {
 	printf("%s\n", rainbow_table[i]);
-    }*/
+    }
+    exit(0);
+    */
 
     // create thread for communication
     pthread_t comm_thread;
