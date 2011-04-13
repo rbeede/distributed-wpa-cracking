@@ -1177,11 +1177,11 @@ int logMessage(int fd, const char* format, ...) {
 	// format comes out with 0 padded numbers and looks like:  "YYYY-mm-dd HH:MM:SS +0000" or "YYYY-mm-dd HH:MM:SS -0000"
 	//	where +/-0000 is the time zone offset
 	strftime(currTimeFormatted, sizeof(currTimeFormatted), "%Y-%m-%d %H:%M:%S %z", ptm);  // %z is a GNU extension
+	strncat(total, currTimeFormatted, 25);  // add the formatted date to the line
 	
-
-    // format output string
-    strncat(total, currTimeFormatted, 25);
-
+	strncat(total, msg, MAX_LOG_STR - 25);  // minus 25 for characters in date/time
+	
+	
     // write buffer and flush
     ret = write(fd, total, strlen(total));
     if (ret<0) return -1;
