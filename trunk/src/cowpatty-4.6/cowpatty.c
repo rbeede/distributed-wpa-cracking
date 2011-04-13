@@ -1173,13 +1173,13 @@ int logMessage(int fd, const char* format, ...) {
 	struct tm * ptm;
 	ptm = gmtime (&rawtime);  // No messing with time zones and daylight savings time
 	
-	char currTimeFormatted[26];  // sizeof(currTimeFormatted) works on this since it isn't a pointer to a malloc
-	// format comes out with 0 padded numbers and looks like:  "YYYY-mm-dd HH:MM:SS +0000" or "YYYY-mm-dd HH:MM:SS -0000"
-	//	where +/-0000 is the time zone offset
-	strftime(currTimeFormatted, sizeof(currTimeFormatted), "%Y-%m-%d %H:%M:%S %z", ptm);  // %z is a GNU extension
-	strncat(total, currTimeFormatted, 25);  // add the formatted date to the line
+	char currTimeFormatted[27];  // sizeof(currTimeFormatted) works on this since it isn't a pointer to a malloc
+	// format comes out with 0 padded numbers and looks like:  "YYYY-mm-dd HH:MM:SS +0000\t" or "YYYY-mm-dd HH:MM:SS -0000\t"
+	//	where +/-0000 is the time zone offset and \t means a single tab character
+	strftime(currTimeFormatted, sizeof(currTimeFormatted), "%Y-%m-%d %H:%M:%S %z\t", ptm);  // %z is a GNU extension
+	strncat(total, currTimeFormatted, 26);  // add the formatted date to the line
 	
-	strncat(total, msg, MAX_LOG_STR - 25);  // minus 25 for characters in date/time
+	strncat(total, msg, MAX_LOG_STR - 26);  // minus 25 for characters in date/time
 	
 	
     // write buffer and flush
