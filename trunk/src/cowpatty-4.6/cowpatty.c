@@ -1325,7 +1325,7 @@ int processConnection(int master_socket_fd) {
     // parse packet
     for (i=0; i<len; i++) {
 	if (buffer[i] == '\4') {
-	    logMessage(log_fd,"RECEIVED: %s %s %s $s\n",
+	    logMessage(log_fd,"RECEIVED: %s %s %s %s\n",
 		       message, jobid, capture_path, output_path);
 	    break;
 	} else if (buffer[i] == '\31') {
