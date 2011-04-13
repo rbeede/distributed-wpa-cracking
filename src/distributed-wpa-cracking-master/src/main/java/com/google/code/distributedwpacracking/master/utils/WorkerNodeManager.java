@@ -154,8 +154,9 @@ public class WorkerNodeManager {
 		}
 		os.write(4);  // US ASCII End of Transmission
 		
-		os.close();
-		socket.shutdownOutput();
+		// Don't close the OutputStream or the entire socket gets closed
+		
+		socket.shutdownOutput();  // half-way shutdown
 		
 		
 		// Read the response
@@ -172,8 +173,10 @@ public class WorkerNodeManager {
 			}
 		}
 		
-		is.close();
-		socket.close();
+		// Don't close the InputStream as that closes the entire socket
+		
+		
+		socket.close();  // Really close everything now
 		
 		
 		final Collection<String> responseParts = new ArrayList<String>();
