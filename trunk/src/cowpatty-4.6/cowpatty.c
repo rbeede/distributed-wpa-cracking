@@ -31,7 +31,7 @@
  */
 
 #define PROGNAME "cowpatty"
-#define VER "CU5673"
+#define VER "4.6"
 #define MAXPASSPHRASE 256
 #define DOT1X_LLCTYPE "\x88\x8e"
 #define MAX_PKT_LEN 4096
@@ -54,7 +54,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>
-#include <time.h>
 
 #include "cowpatty.h"
 #include "common.h"
@@ -79,6 +78,7 @@ char *words;
    malloc/free for each entry. */
 char password_buf[65];
 unsigned long wordstested = 0;
+
 int status = 0;
 char rainbow_table_path[256];
 int port_num;
@@ -88,7 +88,7 @@ int node_rank;
 int start_offset;
 int end_offset;
 int num_ssid;
-char **rainbow_table;
+unsigned char **rainbow_table;
 
 struct job {
     char jobid[MAX_STR_LEN];
@@ -115,6 +115,48 @@ void printstats(struct timeval start, struct timeval end,
 int nextdictword(char *word, FILE * fp);
 int nexthashrec(FILE * fp, struct hashdb_rec *rec);
 void fatal(const char *msg);
+
+/*
+ * Writes a log message to a file.  A timestamp is written along with the 
+ * message.  The file should be previously opened in append mode.
+ *  fd     - file descriptor of file to write to
+ *  format - format string
+ */
+int logMessage(int fd, const char* format, ...) {
+
+    int ret;                   // return value
+    char msg[MAX_LOG_STR];     // message to log
+    char total[MAX_LOG_STR];   // total buffer to output
+    va_list args;              // arguments from formatted string
+    struct timeval log_time;   // timestamp to output with message
+
+    // clear memory
+    memset(msg,0,MAX_LOG_STR);
+    memset(total,0,MAX_LOG_STR);
+
+    // turn parameters into a character string
+    va_start(args,format);
+    vsnprintf(msg,MAX_LOG_STR,format,args);
+    va_end(args);
+
+    //TODO: set time zone (struct timezone - see gettimeofday man page)
+    //TODO: include timestamp output (not just seconds)
+    // get timestamp to output
+    gettimeofday(&log_time, 0);
+
+    // format output string
+    ret = snprintf(total, MAX_LOG_STR, "%d: ", (int)log_time.tv_sec);
+    if (ret<0) return -1;
+    strncat(total, msg, MAX_LOG_STR-ret);
+
+    // write buffer and flush
+    ret = write(fd, total, strlen(total));
+    if (ret<0) return -1;
+    ret = fsync(fd);
+    if (ret<0) return -1;
+
+    return 0;
+}
 
 void fatal(const char *msg) {
     perror(msg);
@@ -692,13 +734,16 @@ int nexthashrec(FILE * fp, struct hashdb_rec *rec) {
     return recordlength;
 }
 
-int nexthashrec_dist(int fd, struct hashdb_rec *rec) {
+int nexthashrec_dist(unsigned char* rt,int i,struct hashdb_rec *rec) {
     
     int recordlength, wordlen;
+    int len = i;
 
     //TODO: check errors
     //TODO: change fprintfs to logMessages
-    read(fd, &rec->rec_size, sizeof(rec->rec_size));
+    memcpy(&rec->rec_size, rt+len, sizeof(rec->rec_size));
+    len += sizeof(rec->rec_size);
+    //read(fd, &rec->rec_size, sizeof(rec->rec_size));
     /*if (fread(&rec->rec_size, sizeof(rec->rec_size), 1, fp) != 1) {	
 	perror("fread");
 	return -1;
@@ -708,20 +753,23 @@ int nexthashrec_dist(int fd, struct hashdb_rec *rec) {
     wordlen = recordlength - (sizeof(rec->pmk) + sizeof(rec->rec_size));
     
     if (wordlen > 63 || wordlen < 8) {
-	fprintf(stderr, "Invalid word length: %d\n", wordlen);
+	logMessage(log_fd, "Invalid word length: %d\n", wordlen);
 	return -1;
     }
     
     /* hackity, hack, hack, hack */
     rec->word = password_buf;
     
-    read(fd, rec->word, wordlen);
+    memcpy(rec->word, rt+len, wordlen);
+    len += wordlen;
+    //read(fd, rec->word, wordlen);
     /*if (fread(rec->word, wordlen, 1, fp) != 1) {
 	perror("fread");
 	return -1;
 	}*/
     
-    read(fd, rec->pmk, sizeof(rec->pmk));
+    memcpy(rec->pmk, rt+len, sizeof(rec->pmk));
+    //read(fd, rec->pmk, sizeof(rec->pmk));
     /*if (fread(rec->pmk, sizeof(rec->pmk), 1, fp) != 1) {
 	perror("fread");
 	return -1;
@@ -1005,70 +1053,64 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 	return 1;
 }
 
-//TODO: this needs lots of work
 int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
-			 struct crack_data *cdata,char *raint) {
+			 struct crack_data *cdata,unsigned char *raint) {
 	
-    FILE* fp;
-    int reclen, wordlen;
+    int reclen, wordlen, i;
     u8 pmk[32];
     u8 ptk[64];
     u8 keymic[16];
     struct wpa_ptk *ptkset;
     struct hashdb_rec rec;
     
-    //TODO: get SSID from file name (not sure if we really need it here)
+    //TODO: get SSID from file
+    //TODO: shouldn't need to look through all tables, just the one
+    // with the corresponding SSID
     
-    //TODO: add check to make sure we haven't gone passed this worker's
-    // allotted limit
-    int i;
     while (i<(end_offset-start_offset+1)) {
 	
-	/* Populate the hashdb_rec with the next record */
-	reclen = nexthashrec_dist(fp, &rec);
+	// Populate the hashdb_rec with the next record
+	reclen = nexthashrec_dist(raint, i, &rec);
+	i += reclen;
 	
-	/* nexthashrec returns the length of the record, test to ensure
-	   passphrase is greater than 8 characters */
+	// nexthashrec returns the length of the record, test to ensure
+	//   passphrase is greater than 8 characters
 	wordlen = rec.rec_size - 
 	    (sizeof(rec.pmk) + sizeof(rec.rec_size));
 	if (wordlen < 8) {
-	    printf("Found a record that was too short, this "
+	    logMessage(log_fd, "Found a record that was too short, this "
 		   "shouldn't happen in practice!\n");
-	    return(-1);
+	    return -1;
 	}
 	
-	/* Populate passphrase with the record contents */
+	// Populate passphrase with the record contents
 	memcpy(passphrase, rec.word, wordlen);
 	
-	/* NULL terminate passphrase string */
+	// NULL terminate passphrase string
 	passphrase[wordlen] = 0;
 	
-	if (opt->verbose > 1) {
-	    printf("Testing passphrase: %s\n", passphrase);
-	}
+	if (opt->verbose > 1) 
+	    logMessage(log_fd,"Testing passphrase: %s\n", passphrase);
 	
-	/* Increment the words tested counter */
+	// Increment the words tested counter
 	wordstested++;
 	
-	/* Status display */
-	if ((wordstested % 10000) == 0) {
-	    printf("key no. %ld: %s\n", wordstested, passphrase);
-	    fflush(stdout);
-	}
+	// Status display
+	if ((wordstested % 10000) == 0)
+	    logMessage(log_fd, "key no. %ld: %s\n", wordstested, passphrase);
 	
-	if (opt->verbose > 1) {
-	    printf("Calculating PTK for \"%s\".\n", passphrase);
-	}
+	if (opt->verbose > 1)
+	    logMessage(log_fd, "Calculating PTK for \"%s\".\n", passphrase);
 	
+	//TODO: fix verbosity > 2 (lamont_hdump will print to stdout)
 	if (opt->verbose > 2) {
 	    printf("PMK is");
 	    lamont_hdump(pmk, sizeof(pmk));
 	}
 	
-	if (opt->verbose > 1) {
-	    printf("Calculating PTK with collected data and "
-		   "PMK.\n");
-	}
+	if (opt->verbose > 1)
+	    logMessage(log_fd,"Calculating PTK with collected data and "
+		       "PMK.\n");
 	
 	wpa_pmk_to_ptk(rec.pmk, cdata->aa, cdata->spa, cdata->anonce,
 		       cdata->snonce, ptk, sizeof(ptk));
@@ -1080,10 +1122,9 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
 	
 	ptkset = (struct wpa_ptk *)ptk;
 	
-	if (opt->verbose > 1) {
-	    printf("Calculating hmac-MD5 Key MIC for this "
-		   "frame.\n");
-	}
+	if (opt->verbose > 1) 
+	    logMessage(log_fd,"Calculating hmac-MD5 Key MIC for this "
+		       "frame.\n");
 	
 	if (opt->nonstrict == 0) {
 	    hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
@@ -1144,53 +1185,6 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 
 }
 
-/*
- * Writes a log message to a file.  A timestamp is written along with the 
- * message.  The file should be previously opened in append mode.
- *  fd     - file descriptor of file to write to
- *  format - format string
- */
-int logMessage(int fd, const char* format, ...) {
-
-    int ret;                   // return value
-    char msg[MAX_LOG_STR];     // message to log
-    char total[MAX_LOG_STR];   // total buffer to output
-    va_list args;              // arguments from formatted string
-
-    // clear memory
-    memset(msg,0,MAX_LOG_STR);
-    memset(total,0,MAX_LOG_STR);
-
-    // turn parameters into a character string
-    va_start(args,format);
-    vsnprintf(msg,MAX_LOG_STR,format,args);
-    va_end(args);
-
-	
-	// Get the current time so we can output it in the log as a nicely formatted one :)
-	time_t rawtime;
-	time (&rawtime);
-	struct tm * ptm;
-	ptm = gmtime (&rawtime);  // No messing with time zones and daylight savings time
-	
-	char currTimeFormatted[27];  // sizeof(currTimeFormatted) works on this since it isn't a pointer to a malloc
-	// format comes out with 0 padded numbers and looks like:  "YYYY-mm-dd HH:MM:SS +0000\t" or "YYYY-mm-dd HH:MM:SS -0000\t"
-	//	where +/-0000 is the time zone offset and \t means a single tab character
-	strftime(currTimeFormatted, sizeof(currTimeFormatted), "%Y-%m-%d %H:%M:%S %z\t", ptm);  // %z is a GNU extension
-	strncat(total, currTimeFormatted, 26);  // add the formatted date to the line
-	
-	strncat(total, msg, MAX_LOG_STR - 26);  // minus 25 for characters in date/time
-	
-	
-    // write buffer and flush
-    ret = write(fd, total, strlen(total));
-    if (ret<0) return -1;
-    ret = fsync(fd);
-    if (ret<0) return -1;
-
-    return 0;
-}
-
 void* getCracking(void* arg) {
 
     //TODO: manage errors and exits differently (communicate)
@@ -1215,11 +1209,13 @@ void* getCracking(void* arg) {
     strncpy(capdata.pcapfilename, currJob.capture_path,
             sizeof(capdata.pcapfilename));
     if (openpcap(&capdata) != 0) {
-	printf("Unsupported or unrecognized pcap file.\n");
-	exit(-1);
+	logMessage(log_fd,"Unsupported or unrecognized pcap file.\n");
+	return NULL;
     }
 
     //TODO: opt.verbose,opt.checkonly, opt.nonstrict will default to 0
+    // for testing purposes
+    opt.verbose = 2;
     
     /* populates global *packet */
     while (getpacket(&capdata) > 0) {
@@ -1245,15 +1241,15 @@ void* getCracking(void* arg) {
     
     if (!(cdata.aaset && cdata.spaset && cdata.snonceset &&
 	  cdata.anonceset && cdata.keymicset && cdata.eapolframeset)) {
-	printf("End of pcap capture file, incomplete four-way handshake "
-	       "exchange.  Try using a\ndifferent capture.\n");
-	exit(-1);
+	logMessage(log_fd,"End of pcap capture file, incomplete four-way "
+		   "handshake exchange.  Try using a different capture.\n");
+	return NULL;
     } else {
 	if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
-	    printf("Collected all necessary data to mount crack"
+	    logMessage(log_fd, "Collected all necessary data to mount crack"
 		   " against WPA2/PSK passphrase.\n");
 	} else if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_MD5_RC4) {
-	    printf("Collected all necessary data to mount crack"
+	    logMessage(log_fd, "Collected all necessary data to mount crack"
 		   " against WPA/PSK passphrase.\n");
 	}
     }
@@ -1284,14 +1280,13 @@ void* getCracking(void* arg) {
     for (i=0; i<num_ssid; i++) {
 	ret = hashfile_attack_dist(&opt,passphrase,&cdata,rainbow_table[i]);
 	if (ret==0) {
-	    //SOLUTION found
-	    //printf("\nThe PSK is \"%s\".\n", passphrase);
+	    logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
 	    break;
 	}
     }
     gettimeofday(&end, 0);
     if (ret!=0) {
-	//SOLUTION not found
+	logMessage(log_fd,"NO SOLUTION\n");
     }
     
     status = FINISHED;
@@ -1483,7 +1478,7 @@ int loadRainbowTable(char *path) {
     rewinddir(dir);
 
     // allocate memory for pointers to file chunks
-    rainbow_table = (char**)malloc(count*sizeof(char*));
+    rainbow_table = (unsigned char**)malloc(count*sizeof(unsigned char*));
     if (rainbow_table==NULL) return -1;
 
     //TODO: change 256 to something intelligent
@@ -1510,7 +1505,8 @@ int loadRainbowTable(char *path) {
 	// read in chunk of file
 	//TODO: clean this up
 	size_t len = end_offset-start_offset+1;
-	char *buffer = (char*)malloc(len*sizeof(char));
+	unsigned char *buffer = (unsigned char*)malloc(len
+						       *sizeof(unsigned char));
 	if (buffer==NULL) return -1;
 	ret = read(fd, buffer, len);
 	//TODO: check number of bytes actually read
@@ -1603,6 +1599,8 @@ int main(int argc, char **argv) {
     
     printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
 	   PROGNAME, VER);
+
+    
 
     // parse arguments and test
     parseOptsDist(argc,argv);
