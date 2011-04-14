@@ -1,0 +1,7 @@
+
+BSSID, First time seen, Last time seen, channel, Speed, Privacy, Cipher, Authentication, Power, # beacons, # IV, LAN IP, ID-length, ESSID, Key
+00:1A:70:41:B3:07, 2011-04-14 13:17:44, 2011-04-14 13:17:54,  4,  54, WPA , TKIP,PSK, -13,       94,       31,   0.  0.  0.  0,   6, router, 
+
+Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs
+00:01:02:03:04:05, 2011-04-14 13:17:45, 2011-04-14 13:17:54,  -5,      161, 00:1A:70:41:B3:07,
+
