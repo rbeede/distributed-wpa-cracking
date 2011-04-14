@@ -1,0 +1,7 @@
+
+BSSID, First time seen, Last time seen, channel, Speed, Privacy, Cipher, Authentication, Power, # beacons, # IV, LAN IP, ID-length, ESSID, Key
+00:1A:70:41:B3:07, 2011-04-14 12:51:50, 2011-04-14 12:52:37,  4,  54, WPA , TKIP,PSK,  -7,      409,      155,   0.  0.  0.  0,   7, linksys, 
+
+Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs
+00:01:02:03:04:05, 2011-04-14 12:51:53, 2011-04-14 12:52:37,  -7,      502, 00:1A:70:41:B3:07, linksys
+
