@@ -43,55 +43,55 @@
 #define DOT11_FC_SUBTYPE_QOSNULL         12
 
 struct dot11hdr {
-	union {
-		struct {
-			uint8_t		version:2;
-			uint8_t		type:2;
-			uint8_t		subtype:4;
-			uint8_t		to_ds:1;
-			uint8_t		from_ds:1;
-			uint8_t		more_frag:1;
-			uint8_t		retry:1;
-			uint8_t		pwrmgmt:1;
-			uint8_t		more_data:1;
-			uint8_t		protected:1;
-			uint8_t		order:1;
-		} __attribute__ ((packed)) fc;
-
-		uint16_t	fchdr;
-	} u1;
-
-	uint16_t	duration;
-	uint8_t		addr1[6];
-	uint8_t		addr2[6];
-	uint8_t		addr3[6];
-
-	union {
-		struct {
-			uint16_t	fragment:4;
-			uint16_t	sequence:12;
-		} __attribute__ ((packed)) seq;
-
-		uint16_t	seqhdr;
-	} u2;
-
+    union {
+	struct {
+	    uint8_t		version:2;
+	    uint8_t		type:2;
+	    uint8_t		subtype:4;
+	    uint8_t		to_ds:1;
+	    uint8_t		from_ds:1;
+	    uint8_t		more_frag:1;
+	    uint8_t		retry:1;
+	    uint8_t		pwrmgmt:1;
+	    uint8_t		more_data:1;
+	    uint8_t		protected:1;
+	    uint8_t		order:1;
+	} __attribute__ ((packed)) fc;
+	
+	uint16_t	fchdr;
+    } u1;
+    
+    uint16_t	duration;
+    uint8_t		addr1[6];
+    uint8_t		addr2[6];
+    uint8_t		addr3[6];
+    
+    union {
+	struct {
+	    uint16_t	fragment:4;
+	    uint16_t	sequence:12;
+	} __attribute__ ((packed)) seq;
+	
+	uint16_t	seqhdr;
+    } u2;
+    
 } __attribute__ ((packed));
 
 
 /* IEEE 802.1X frame information */
 
 struct ieee802_1x_hdr {
-	u8 version;
-	u8 type;
-	u16 length;
-	/* followed by length octets of data */
+    u8 version;
+    u8 type;
+    u16 length;
+    /* followed by length octets of data */
 } __attribute__ ((packed));
 
 /* The 802.1x header indicates a version, type and length */
 struct ieee8021x {
-	u8 version;
-	u8 type;
-	u16 length;
+    u8 version;
+    u8 type;
+    u16 length;
 } __attribute__ ((packed));
 
 #define MAXPASSLEN 64
@@ -118,17 +118,17 @@ struct ieee8021x {
 #define WPA_REPLAY_COUNTER_LEN 8
 
 struct wpa_eapol_key {
-	u8 type;
-	u16 key_info;
-	u16 key_length;
-	u8 replay_counter[WPA_REPLAY_COUNTER_LEN];
-	u8 key_nonce[WPA_NONCE_LEN];
-	u8 key_iv[16];
-	u8 key_rsc[8];
-	u8 key_id[8];		/* Reserved in IEEE 802.11i/RSN */
-	u8 key_mic[16];
-	u16 key_data_length;
-/*    u8 key_data[0]; */
+    u8 type;
+    u16 key_info;
+    u16 key_length;
+    u8 replay_counter[WPA_REPLAY_COUNTER_LEN];
+    u8 key_nonce[WPA_NONCE_LEN];
+    u8 key_iv[16];
+    u8 key_rsc[8];
+    u8 key_id[8];		/* Reserved in IEEE 802.11i/RSN */
+    u8 key_mic[16];
+    u16 key_data_length;
+    /*    u8 key_data[0]; */
 } __attribute__ ((packed));
 
 struct wpa_ptk {
