@@ -1423,18 +1423,16 @@ void* listenForPacket(void* arg1) {
 
     // bind address to socket
     if (bind(worker_socket_fd, (struct sockaddr *) &worker_addr,
-	     sizeof(worker_addr)) < 0)
-	fatal("Unable to bind address to socket\n");
+	     sizeof(worker_addr)) < 0) {
+	logMessage(log_fd,"Unable to bind address to socket\n");
+	return NULL;
+    }
 
     // set up socket to listen
     listen(worker_socket_fd, 0);
     
     // init size of master address
     master_len = sizeof(master_addr);
-
-    //TODO: do we need to set up signal to prevent zombie procs
-    // defense against zombies
-    signal(SIGCHLD, SIG_IGN);
 
     // loop until we receive a packet
     while(1) {
@@ -1454,12 +1452,16 @@ void* listenForPacket(void* arg1) {
 }
 
 int loadRainbowTable(char *path) {
-    //TODO: figure out what to do with currJob vs path
-    int fd;                 // file descriptor of files in directory
-    int ret;                // return value
-    int count;              // number of files to read through
-    DIR *dir;               // directory to search
-    struct dirent *dirent;  // directory entry
+
+    int index=0;
+    int fd;                      // file descriptor of files in directory
+    int ret;                     // return value
+    int count;                   // number of files to read through
+    DIR *dir;                    // directory to search
+    size_t len;		         // number of bytes to read from each file
+    struct dirent *dirent;	 // directory entry
+    char temp_path[MAX_STR_LEN]; // temp var for building path
+    unsigned char* buffer;	 // data buffer
 
     // open directory to search
     dir = opendir(path);
@@ -1480,18 +1482,14 @@ int loadRainbowTable(char *path) {
     rainbow_table = (unsigned char**)malloc(count*sizeof(unsigned char*));
     if (rainbow_table==NULL) return -1;
 
-    //TODO: change 256 to something intelligent
-    char temp_path[256];
-    int index=0;
-
     // open entries in directory
     while ((dirent = readdir(dir))!=NULL) {
 	// ignore entries that aren't regular files
 	if (dirent->d_type != DT_REG) continue;
 
 	// create path to file
-	memset(temp_path,0,256);
-	snprintf(temp_path,256,"%s/%s",path,dirent->d_name);
+	memset(temp_path,0,MAX_STR_LEN);
+	snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
 
 	// open file
 	fd = open(temp_path,O_RDONLY);
@@ -1502,10 +1500,8 @@ int loadRainbowTable(char *path) {
 	if (ret<0) return -1;
 
 	// read in chunk of file
-	//TODO: clean this up
-	size_t len = end_offset-start_offset+1;
-	unsigned char *buffer = (unsigned char*)malloc(len
-						       *sizeof(unsigned char));
+	len = end_offset-start_offset+1;
+	buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
 	if (buffer==NULL) return -1;
 	ret = read(fd, buffer, len);
 	//TODO: check number of bytes actually read
@@ -1599,8 +1595,6 @@ int main(int argc, char **argv) {
     printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
 	   PROGNAME, VER);
 
-    
-
     // parse arguments and test
     parseOptsDist(argc,argv);
     //TODO: test opts
@@ -1616,14 +1610,6 @@ int main(int argc, char **argv) {
 	logMessage(log_fd,"Rainbow table loaded\n");
     }
     num_ssid = ret;
-
-    /*
-    int i;
-    for (i=0; i<ret; i++) {
-	printf("%s\n", rainbow_table[i]);
-    }
-    exit(0);
-    */
 
     // create thread for communication
     pthread_t comm_thread;
