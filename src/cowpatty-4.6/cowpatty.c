@@ -79,6 +79,10 @@ char *words;
 char password_buf[65];
 unsigned long wordstested = 0;
 
+struct ssid_table {
+        char *ssid;
+        unsigned char *buffer;
+};
 int status = 0;
 char rainbow_table_path[256];
 int port_num;
@@ -88,7 +92,7 @@ int node_rank;
 int start_offset;
 int end_offset;
 int num_ssid;
-unsigned char **rainbow_table;
+struct ssid_table **rainbow_table;
 
 struct job {
     char jobid[MAX_STR_LEN];
@@ -1466,7 +1470,9 @@ int loadRainbowTable(char *path) {
     size_t len;		         // number of bytes to read from each file
     struct dirent *dirent;	 // directory entry
     char temp_path[MAX_STR_LEN]; // temp var for building path
-    unsigned char* buffer;	 // data buffer
+    //unsigned char* buffer;	 
+    struct ssid_table *ssid_entry;
+    //unsigned char* ssid_name;
 
     // open directory to search
     dir = opendir(path);
@@ -1484,7 +1490,7 @@ int loadRainbowTable(char *path) {
     rewinddir(dir);
 
     // allocate memory for pointers to file chunks
-    rainbow_table = (unsigned char**)malloc(count*sizeof(unsigned char*));
+    rainbow_table = (struct ssid_table**)malloc(count*sizeof(struct ssid_table*));
     if (rainbow_table==NULL) return -1;
 
     // open entries in directory
@@ -1495,7 +1501,14 @@ int loadRainbowTable(char *path) {
 	// create path to file
 	memset(temp_path,0,MAX_STR_LEN);
 	snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
-
+    
+    // allocate memory to ssid entry and ssid name
+    ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
+    ssid_entry->ssid = (unsigned char*)malloc(strlen(dirent->d_name)*sizeof(unsigned char));
+    
+    //copy hash file name to ssid name
+    strcpy(ssid_entry->ssid, dirent->d_name);
+    
 	// open file
 	fd = open(temp_path,O_RDONLY);
 	if (fd<0) return -1;
@@ -1506,12 +1519,12 @@ int loadRainbowTable(char *path) {
 
 	// read in chunk of file
 	len = end_offset-start_offset+1;
-	buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
-	if (buffer==NULL) return -1;
-	ret = read(fd, buffer, len);
+	ssid_entry->buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
+	if (ssid_entry->buffer==NULL) return -1;
+	ret = read(fd, ssid_entry->buffer, len);
 	//TODO: check number of bytes actually read
 	if (ret<0) return -1;
-	rainbow_table[index] = buffer;
+	rainbow_table[index] = ssid_entry;
 	
 	// close file
 	ret = close(fd);
