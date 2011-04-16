@@ -31,7 +31,7 @@
  */
 
 #define PROGNAME "cowpatty"
-#define VER "4.6"
+#define VER "CU5673"
 #define MAXPASSPHRASE 256
 #define DOT1X_LLCTYPE "\x88\x8e"
 #define MAX_PKT_LEN 4096
@@ -128,7 +128,6 @@ int logMessage(int fd, const char* format, ...) {
     char msg[MAX_LOG_STR];     // message to log
     char total[MAX_LOG_STR];   // total buffer to output
     va_list args;              // arguments from formatted string
-    struct timeval log_time;   // timestamp to output with message
 
     // clear memory
     memset(msg,0,MAX_LOG_STR);
@@ -139,16 +138,22 @@ int logMessage(int fd, const char* format, ...) {
     vsnprintf(msg,MAX_LOG_STR,format,args);
     va_end(args);
 
-    //TODO: set time zone (struct timezone - see gettimeofday man page)
-    //TODO: include timestamp output (not just seconds)
-    // get timestamp to output
-    gettimeofday(&log_time, 0);
-
-    // format output string
-    ret = snprintf(total, MAX_LOG_STR, "%d: ", (int)log_time.tv_sec);
-    if (ret<0) return -1;
-    strncat(total, msg, MAX_LOG_STR-ret);
-
+	
+	// Get the current time so we can output it in the log as a nicely formatted one :)
+	time_t rawtime;
+	time (&rawtime);
+	struct tm * ptm;
+	ptm = gmtime (&rawtime);  // No messing with time zones and daylight savings time
+	
+	char currTimeFormatted[27];  // sizeof(currTimeFormatted) works on this since it isn't a pointer to a malloc
+	// format comes out with 0 padded numbers and looks like:  "YYYY-mm-dd HH:MM:SS +0000\t" or "YYYY-mm-dd HH:MM:SS -0000\t"
+	//	where +/-0000 is the time zone offset and \t means a single tab character
+	strftime(currTimeFormatted, sizeof(currTimeFormatted), "%Y-%m-%d %H:%M:%S %z\t", ptm);  // %z is a GNU extension
+	strncat(total, currTimeFormatted, 26);  // add the formatted date to the line
+	
+	strncat(total, msg, MAX_LOG_STR - 26);  // minus 25 for characters in date/time
+	
+	
     // write buffer and flush
     ret = write(fd, total, strlen(total));
     if (ret<0) return -1;
