@@ -34,7 +34,7 @@ The master will send a tcp packet.  The master will be responsible for queuing j
 
 Contents will be:
 
-START\0\31jobidF3234\0\31/var/length/path/to/wifi.pcap\0\31/var/length/path/to/job/output/dir/\0\31\4
+START\0\31jobidF3234\0\31/var/length/path/to/wifi.pcap\0\31/var/length/path/to/job/output/dir/\0\31SSID Case Sensitive Name\0\31\4
 
 Where \0 is the null character indicating the end of a string (8-bit chars)
 \31 means US or the ASCII Unit Separator which indicates the end of a text field value.
