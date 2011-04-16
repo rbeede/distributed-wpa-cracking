@@ -1,0 +1,6 @@
+WRT54GL v1.1
+
+wireless  is the SSID name
+
+
+I don't actually know the password.  It is just random stuff I made up that won't be in the rainbow table :)
