@@ -155,7 +155,7 @@ int logMessage(int fd, const char* format, ...) {
 	strftime(currTimeFormatted, sizeof(currTimeFormatted), "%Y-%m-%d %H:%M:%S %z\t", ptm);  // %z is a GNU extension
 	strncat(total, currTimeFormatted, 26);  // add the formatted date to the line
 	
-	strncat(total, msg, MAX_LOG_STR - 26);  // minus 25 for characters in date/time
+	strncat(total, msg, MAX_LOG_STR - 26);  // minus 26 for characters in date/time
 	
 	
     // write buffer and flush
