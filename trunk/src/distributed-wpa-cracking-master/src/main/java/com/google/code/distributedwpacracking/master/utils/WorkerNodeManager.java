@@ -57,7 +57,7 @@ public class WorkerNodeManager {
 			
 			final String[] responseParts;
 			try {
-				responseParts = commWorker(address, "START", job.getId(), captureFile.getAbsolutePath(), jobDir.getAbsolutePath());
+				responseParts = commWorker(address, "START", job.getId(), captureFile.getAbsolutePath(), jobDir.getAbsolutePath(), job.getSsid());
 			} catch(final IOException e) {
 				final String errMsg = "Job id of " + job.getId() + " failed to submit to worker node with error " + e.getMessage();
 				log.error(errMsg, e);
