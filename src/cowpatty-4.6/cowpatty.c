@@ -1325,12 +1325,14 @@ int processConnection(int master_socket_fd) {
     char jobid[MAX_STR_LEN];        // job ID being queried
     char capture_path[MAX_STR_LEN]; // path to capture file (if applicable)
     char output_path[MAX_STR_LEN];  // path to output directory (if applicable)
+    char ssid[MAX_STR_LEN];         // SSID
 
     // clear buffers
     memset(message,      0, MAX_STR_LEN);
     memset(jobid,        0, MAX_STR_LEN);
     memset(capture_path, 0, MAX_STR_LEN);
     memset(output_path,  0, MAX_STR_LEN);
+    memset(ssid,         0, MAX_STR_LEN);
     
     // parse packet
     for (i=0; i<len; i++) {
@@ -1347,6 +1349,7 @@ int processConnection(int master_socket_fd) {
 	    case 1: jobid[sub_i]        = buffer[i]; break;
 	    case 2: capture_path[sub_i] = buffer[i]; break;
 	    case 3: output_path[sub_i]  = buffer[i]; break;
+	    case 4: ssid[sub_i]         = buffer[i]; break;
 	    default: break;
 	    }
 	    sub_i++;
