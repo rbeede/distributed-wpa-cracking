@@ -1323,10 +1323,10 @@ int processConnection(int master_socket_fd) {
     char output_path[MAX_STR_LEN];  // path to output directory (if applicable)
 
     // clear buffers
-    memset(&message,      0, MAX_STR_LEN);
-    memset(&jobid,        0, MAX_STR_LEN);
-    memset(&capture_path, 0, MAX_STR_LEN);
-    memset(&output_path,  0, MAX_STR_LEN);
+    memset(message,      0, MAX_STR_LEN);
+    memset(jobid,        0, MAX_STR_LEN);
+    memset(capture_path, 0, MAX_STR_LEN);
+    memset(output_path,  0, MAX_STR_LEN);
     
     // parse packet
     for (i=0; i<len; i++) {
