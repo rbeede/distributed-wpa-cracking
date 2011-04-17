@@ -1507,6 +1507,8 @@ int loadRainbowTable(char *path) {
 
     // open entries in directory
     while ((dirent = readdir(dir))!=NULL) {
+	if (strcmp(".",dirent->d_name)==0) continue;
+	if (strcmp("..",dirent->d_name)==0) continue;
 	// ignore entries that aren't regular files
 	//if (dirent->d_type != DT_REG) continue;
 
