@@ -1331,10 +1331,6 @@ int processConnection(int master_socket_fd) {
     char output_path[MAX_STR_LEN];  // path to output directory (if applicable)
     char ssid[MAX_STR_LEN];         // SSID
 
-    for (i=0; i<len; i++) {
-	logMessage(log_fd,"char %d of buffer: %d\n", i, buffer[i]);
-    }
-
     // clear buffers
     memset(message,      0, MAX_STR_LEN);
     memset(jobid,        0, MAX_STR_LEN);
@@ -1349,7 +1345,6 @@ int processConnection(int master_socket_fd) {
 				   message, jobid, capture_path, output_path, ssid);
 			break;
 		} else if (buffer[i] == (char) 31) {
-			logMessage(log_fd, "DEBUG got 31 char\n");
 			sub_i = 0;
 			sub_count++;
 		} else {
