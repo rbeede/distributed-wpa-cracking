@@ -1167,26 +1167,29 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
     if (len>MAX_STR_LEN) return -1;
 
     memcpy(packet,type,len);
-    packet[len++] = (char)31;
+    packet[len] = (char)31;
+    len++;
 
     if (status!=NULL) {
 	if (strlen(status)+1>MAX_STR_LEN) return -1;
 	memcpy(&packet[len],status,strlen(status)+1);
 	len += strlen(status)+1;
-	packet[len++] = (char)31;
+	packet[len] = (char)31;
+	len++;
 	
 	if (jobid!=NULL) {
 	    if (strlen(jobid)+1>MAX_STR_LEN) return -1;
 	    memcpy(&packet[len],jobid,strlen(jobid)+1);
 	    len += strlen(jobid)+1;
-	    packet[len++] = (char)31;
+	    packet[len] = (char)31;
+	    len++;
 	}
     }
     packet[len] = (char)4;
 
     int i;
     for (i=0; i<len; i++) {
-	logMessage(log_fd, "%d of packet: %d\n", i, packet[i]);
+	logMessage(log_fd, "%d of packet: %c\n", i, packet[i]);
     }
     int n = write(sockfd, packet, len);
     
