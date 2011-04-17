@@ -1380,6 +1380,19 @@ int processConnection(int master_socket_fd) {
 			sub_i++;
 		}
     }
+	
+	int sawEoT = 0;  // false
+	for(i = 0; i < len; i++) {
+		if(buffer[i] == (char) 4) {
+			sawEoT = !0;  // true
+		}
+	}
+	if(0 == sawEoT) {
+		logMessage(log_fd, "Didn't see EoT in packet from remote master!  len was %d", len);
+		sendPacket(master_socket_fd,"ERROR",
+				   "You didn't send a EoT",NULL);
+		return 0;
+	}
     
     if (strcmp(message,"START")==0) {
 		// check if a job is running
@@ -1407,46 +1420,46 @@ int processConnection(int master_socket_fd) {
 		status = RUNNING;
 		sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
     } else if (strcmp(message,"STATUS")==0) {
-	int ret;
-	switch(status) {
-	case LOADED:
-	    ret = sendPacket(master_socket_fd,"STATUS","LOADED",NULL);
-	    if (ret<0) 
-		logMessage(log_fd, "Error occurred while sending packet\n");
-	    break;
-	case RUNNING:
-	    ret = sendPacket(master_socket_fd,"STATUS","RUNNING",jobid);
-	    if (ret<0) 
-		logMessage(log_fd, "Error occurred while sending packet\n");
-	    break;
-	case FINISHED:
-	    ret = sendPacket(master_socket_fd,"STATUS","FINISHED",jobid);
-	    if (ret<0) 
-		logMessage(log_fd, "Error occurred while sending packet\n");
-	    break;
-	case KILLED:
-	    ret = sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
-	    if (ret<0) 
-		logMessage(log_fd, "Error occurred while sending packet\n");
-	    break;
-	default: 
-	    ret = sendPacket(master_socket_fd,"ERROR","Unknown status", NULL);
-	    if (ret<0) 
-		logMessage(log_fd, "Error occurred while sending packet\n");
-	    break;
-	}
+		int ret;
+		switch(status) {
+			case LOADED:
+				ret = sendPacket(master_socket_fd,"STATUS","LOADED",NULL);
+				if (ret<0) 
+				logMessage(log_fd, "Error occurred while sending packet\n");
+				break;
+			case RUNNING:
+				ret = sendPacket(master_socket_fd,"STATUS","RUNNING",jobid);
+				if (ret<0) 
+				logMessage(log_fd, "Error occurred while sending packet\n");
+				break;
+			case FINISHED:
+				ret = sendPacket(master_socket_fd,"STATUS","FINISHED",jobid);
+				if (ret<0) 
+				logMessage(log_fd, "Error occurred while sending packet\n");
+				break;
+			case KILLED:
+				ret = sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+				if (ret<0) 
+				logMessage(log_fd, "Error occurred while sending packet\n");
+				break;
+			default: 
+				ret = sendPacket(master_socket_fd,"ERROR","Unknown status", NULL);
+				if (ret<0) 
+				logMessage(log_fd, "Error occurred while sending packet\n");
+				break;
+		}
     } else if (strcmp(message,"KILLJOB")==0) {
-	int ret = pthread_cancel(currJob.thread);
-	if (ret == 0) {
-	    status = KILLED;
-	    sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
-	} else if (errno == ESRCH) {
-	    //TODO: this may mean that the job finished already
-	    sendPacket(master_socket_fd,"ERROR","No such job exists",NULL);
-	} else {
-	    sendPacket(master_socket_fd,"ERROR",
-		       "Kill command failed for unknown reason",NULL);
-	}
+		int ret = pthread_cancel(currJob.thread);
+		if (ret == 0) {
+			status = KILLED;
+			sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+		} else if (errno == ESRCH) {
+			//TODO: this may mean that the job finished already
+			sendPacket(master_socket_fd,"ERROR","No such job exists",NULL);
+		} else {
+			sendPacket(master_socket_fd,"ERROR",
+				   "Kill command failed for unknown reason",NULL);
+		}
     }
 
     return 0;
