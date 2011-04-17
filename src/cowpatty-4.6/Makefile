@@ -23,9 +23,6 @@ cowpatty: common.h md5.c md5.h sha1.h cowpatty.c cowpatty.h sha1.c \
             sha1.h utils.c utils.h
 	$(CC) $(CFLAGS) cowpatty.c -o cowpatty utils.o md5.o sha1.o $(LDLIBS)
 
-genpmk: genpmk.c cowpatty.h utils.h sha1.h common.h
-	$(CC) $(CFLAGS) genpmk.c -o genpmk utils.o sha1.o $(LDLIBS)
-
 utils: utils.c utils.h
 	$(CC) $(CFLAGS) utils.c -c
 
