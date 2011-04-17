@@ -72,6 +72,8 @@ public class Job implements Runnable {
 				log.error(response);
 				this.result = response;
 				return;
+			} else {
+				log.debug(response);
 			}
 		}
 		
