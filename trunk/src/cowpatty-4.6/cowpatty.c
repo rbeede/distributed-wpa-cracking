@@ -1184,7 +1184,7 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
     }
     packet[len] = '\4';
 
-    int n = write(sockfd, packet, MAX_STR_LEN);
+    int n = write(sockfd, packet, len);
     
     return n;
 
@@ -1386,21 +1386,32 @@ int processConnection(int master_socket_fd) {
 	status = RUNNING;
 	sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
     } else if (strcmp(message,"STATUS")==0) {
+	int ret;
 	switch(status) {
 	case LOADED:
-	    sendPacket(master_socket_fd,"STATUS","LOADED",NULL);
+	    ret = sendPacket(master_socket_fd,"STATUS","LOADED",NULL);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
 	    break;
 	case RUNNING:
-	    sendPacket(master_socket_fd,"STATUS","RUNNING",jobid);
+	    ret = sendPacket(master_socket_fd,"STATUS","RUNNING",jobid);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
 	    break;
 	case FINISHED:
-	    sendPacket(master_socket_fd,"STATUS","FINISHED",jobid);
+	    ret = sendPacket(master_socket_fd,"STATUS","FINISHED",jobid);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
 	    break;
 	case KILLED:
-	    sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+	    ret = sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
 	    break;
 	default: 
-	    sendPacket(master_socket_fd,"ERROR","Unknown status", NULL);
+	    ret = sendPacket(master_socket_fd,"ERROR","Unknown status", NULL);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
 	    break;
 	}
     } else if (strcmp(message,"KILLJOB")==0) {
