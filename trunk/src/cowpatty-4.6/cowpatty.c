@@ -1186,7 +1186,7 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 
     int i;
     for (i=0; i<len; i++) {
-	logMessage(log_fd, "%d of packet: %d\n", packet[i]);
+	logMessage(log_fd, "%d of packet: %d\n", i, packet[i]);
     }
     int n = write(sockfd, packet, len);
     
