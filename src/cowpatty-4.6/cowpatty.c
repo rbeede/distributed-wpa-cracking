@@ -1182,8 +1182,12 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 	    packet[len++] = (char)31;
 	}
     }
-    packet[len] = '\4';
+    packet[len] = (char)4;
 
+    int i;
+    for (i=0; i<len; i++) {
+	logMessage(log_fd, "%d of packet: %d\n", packet[i]);
+    }
     int n = write(sockfd, packet, len);
     
     return n;
