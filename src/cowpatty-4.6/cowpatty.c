@@ -1186,6 +1186,7 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 	}
     }
     packet[len] = (char)4;
+    len++;
 
     int i;
     for (i=0; i<len; i++) {
