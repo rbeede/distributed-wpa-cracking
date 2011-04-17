@@ -182,7 +182,7 @@ public class WorkerNodeManager {
 		final Collection<String> responseParts = new ArrayList<String>();
 		int offset = 0;
 		for(int i = 0; i < buffer.length; i++) {
-			if('\31' == buffer[i]) {
+			if((char) 31 == buffer[i]) {
 				// part should include '\0' from buffer, but if buffer is incorrect Java still handles the string termination
 				String part = new String(buffer, offset, i - offset, GlobalConstants.UTF8);
 				
