@@ -1631,7 +1631,7 @@ int main(int argc, char **argv) {
     logMessage(log_fd,"Command line arguments parsed\n");
 
     // load rainbow table into memory
-    int ret;/* = loadRainbowTable(rainbow_table_path);
+    int ret = loadRainbowTable(rainbow_table_path);
     if (ret<0) {
 	logMessage(log_fd,"Unable to load rainbow table\n");
         exit(EXIT_FAILURE);
@@ -1639,7 +1639,7 @@ int main(int argc, char **argv) {
 	status = LOADED;
 	logMessage(log_fd,"Rainbow table loaded\n");
     }
-    num_ssid = ret;*/
+    num_ssid = ret;
 
     // create thread for communication
     pthread_t comm_thread;
