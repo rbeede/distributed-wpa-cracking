@@ -348,11 +348,11 @@ int openpcap(struct capture_data *capdata)
 {
     
     /* Assume for now it's a libpcap file */
-    logMessage(log_fd, "opening pcap offline\n");
+    logMessage(log_fd, "opening pcap offline: %s\n", capdata->pcapfilename);
     p = pcap_open_offline(capdata->pcapfilename, errbuf);
     logMessage(log_fd, "after pcap offline\n");
     if (p == NULL) {
-	logMessage(log_fd, "Unable to open capture file\n");
+	logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
 	perror("Unable to open capture file");
 	return (-1);
     }
