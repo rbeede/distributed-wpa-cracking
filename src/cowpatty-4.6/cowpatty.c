@@ -84,7 +84,7 @@ struct ssid_table {
         unsigned char *buffer;
 };
 int status = 0;
-char rainbow_table_path[256];
+char rainbow_table_path[MAX_STR_LEN];
 int port_num;
 int log_fd;
 int node_count;
@@ -98,6 +98,7 @@ struct job {
     char jobid[MAX_STR_LEN];
     char capture_path[MAX_STR_LEN];
     char output_path[MAX_STR_LEN];
+    char ssid[MAX_STR_LEN];
     pthread_t thread;
 };
 struct job currJob;
@@ -1365,10 +1366,11 @@ logMessage(log_fd, "DEBUG got 31 char\n");
 	    return 0;
 	}
 	// clear memory
-	memset(&currJob,0,sizeof(struct job));
-	memcpy(&currJob.jobid, &jobid, MAX_STR_LEN);
+	memset(&currJob,              0,sizeof(struct job));
+	memcpy(&currJob.jobid,        &jobid, MAX_STR_LEN);
 	memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
-	memcpy(&currJob.output_path, &output_path, MAX_STR_LEN);
+	memcpy(&currJob.output_path,  &output_path, MAX_STR_LEN);
+	memcpy(&currJob.ssid,         &ssid, MAX_STR_LEN);
 	
 	// start worker thread
 	int ret = pthread_create(&currJob.thread,NULL,getCracking,NULL);
@@ -1622,8 +1624,9 @@ int main(int argc, char **argv) {
     //TODO: test opts
     logMessage(log_fd,"Command line arguments parsed\n");
 
+    int ret;
     // load rainbow table into memory
-    int ret = loadRainbowTable(rainbow_table_path);
+    /*int ret = loadRainbowTable(rainbow_table_path);
     if (ret<0) {
 	logMessage(log_fd,"Unable to load rainbow table\n");
         exit(EXIT_FAILURE);
@@ -1631,7 +1634,7 @@ int main(int argc, char **argv) {
 	status = LOADED;
 	logMessage(log_fd,"Rainbow table loaded\n");
     }
-    num_ssid = ret;
+    num_ssid = ret;*/
 
     // create thread for communication
     pthread_t comm_thread;
