@@ -1301,9 +1301,7 @@ void* getCracking(void* arg) {
 	ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
 	if (ret==0) {
 	    logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
-	    break;
 	}
-    }
     gettimeofday(&end, 0);
     if (ret!=0) {
 	logMessage(log_fd,"NO SOLUTION\n");
@@ -1520,7 +1518,7 @@ int loadRainbowTable(char *path) {
     
     // allocate memory to ssid entry and ssid name
     ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
-    ssid_entry->ssid = (unsigned char*)malloc(strlen(dirent->d_name)*sizeof(unsigned char));
+    ssid_entry->ssid = (char*)malloc(strlen(dirent->d_name)*sizeof(char));
     
     //copy hash file name to ssid name
     strcpy(ssid_entry->ssid, dirent->d_name);
