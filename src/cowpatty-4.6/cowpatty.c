@@ -1073,16 +1073,19 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
 			 struct crack_data *cdata,unsigned char* raint) {
 	
-    int reclen, wordlen, i;
+    int reclen, wordlen, i=0;
     u8 pmk[32];
     u8 ptk[64];
     u8 keymic[16];
     struct wpa_ptk *ptkset;
     struct hashdb_rec rec;
     
+    logMessage(log_fd, "before  while in hashfileattack (-v %d)\n",
+	       opt->verbose);
     while (i<(end_offset-start_offset+1)) {
 	
 	// Populate the hashdb_rec with the next record
+	logMessage(log_fd, "nexthashrec %d\n",i);
 	reclen = nexthashrec_dist(raint, i, &rec);
 	i += reclen;
 	
