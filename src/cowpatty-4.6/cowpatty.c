@@ -1641,10 +1641,10 @@ int main(int argc, char **argv) {
 	logMessage(log_fd,"Unable to load rainbow table\n");
         exit(EXIT_FAILURE);
     } else {
+	num_ssid = ret;
 	status = LOADED;
 	logMessage(log_fd,"Rainbow table loaded with %d SSIDs\n", num_ssid);
     }
-    num_ssid = ret;
 
     // create thread for communication
     pthread_t comm_thread;
