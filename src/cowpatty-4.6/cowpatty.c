@@ -346,31 +346,37 @@ void testopts(struct user_opt *opt)
 
 int openpcap(struct capture_data *capdata)
 {
-
-	/* Assume for now it's a libpcap file */
-	p = pcap_open_offline(capdata->pcapfilename, errbuf);
-	if (p == NULL) {
-		perror("Unable to open capture file");
-		return (-1);
-	}
-
-	/* Determine link type */
-	capdata->pcaptype = pcap_datalink(p);
-
-	/* Determine offset to EAP frame based on link type */
-	switch (capdata->pcaptype) {
-	case DLT_NULL:
-	case DLT_EN10MB:
-	case DLT_IEEE802_11:
-	case DLT_PRISM_HEADER:
+    
+    /* Assume for now it's a libpcap file */
+    logMessage(log_fd, "opening pcap offline\n");
+    p = pcap_open_offline(capdata->pcapfilename, errbuf);
+    logMessage(log_fd, "after pcap offline\n");
+    if (p == NULL) {
+	logMessage(log_fd, "Unable to open capture file\n");
+	perror("Unable to open capture file");
+	return (-1);
+    }
+    
+    /* Determine link type */
+    logMessage(log_fd, "determine link type\n");
+    capdata->pcaptype = pcap_datalink(p);
+    logMessage(log_fd, "after determine link type\n");
+    
+    /* Determine offset to EAP frame based on link type */
+    switch (capdata->pcaptype) {
+    case DLT_NULL:
+    case DLT_EN10MB:
+    case DLT_IEEE802_11:
+    case DLT_PRISM_HEADER:
 	case DLT_IEEE802_11_RADIO:
-		break;
-	default:
-		/* Unknown/unsupported pcap type */
-		return (1);
-	}
-
-	return (0);
+	break;
+    default:
+	/* Unknown/unsupported pcap type */
+	return (1);
+    }
+    logMessage(log_fd, "after determine offset\n");
+    
+    return (0);
 }
 
 void closepcap(struct capture_data *capdata)
