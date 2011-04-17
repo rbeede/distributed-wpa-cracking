@@ -1567,7 +1567,7 @@ int loadRainbowTable(char *path) {
 	// create path to file
 	memset(temp_path,0,MAX_STR_LEN);
 	snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
-	//logMessage(log_fd, "Trying path %s\n", temp_path);
+	logMessage(log_fd, "Trying path %s\n", temp_path);
     
 	// allocate memory to ssid entry and ssid name
 	ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
