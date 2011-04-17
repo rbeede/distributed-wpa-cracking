@@ -1064,7 +1064,7 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 }
 
 int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
-			 struct crack_data *cdata,unsigned char *raint) {
+			 struct crack_data *cdata,struct ssid_table *raint) {
 	
     int reclen, wordlen, i;
     u8 pmk[32];
@@ -1287,8 +1287,18 @@ void* getCracking(void* arg) {
     gettimeofday(&start, 0);
     
     int i;
+    struct ssid_table *ssid_entry;
     for (i=0; i<num_ssid; i++) {
-	ret = hashfile_attack_dist(&opt,passphrase,&cdata,rainbow_table[i]);
+            ssid_entry = rainbow_table[i];
+            if(!strcmp(ssid_entry,currJob.ssid))
+                break;
+    }
+    if(i>=num_ssid)
+    {
+        exit(-1);
+    }
+    
+	ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
 	if (ret==0) {
 	    logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
 	    break;
