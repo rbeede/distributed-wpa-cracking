@@ -8,9 +8,15 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+= 2011-04-16 18:34 - Rodney Beede, Arpit Sud, Ryan Kroiss - CODING MAYHEM! =
+
+Master now passes SSID with job start.  Added struct for rainbow table entries.
+
+
 = 2011-04-14 13:53 - Arpit Sud - Added packet capture data to testdata = 
 
 Added packet capture data for testing purpose to testdata.
+
 
 = 2011-04-13 21:20 - Ryan Kroiss - Fixed some issues with job execution = 
 
