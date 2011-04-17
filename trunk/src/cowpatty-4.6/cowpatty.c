@@ -1491,6 +1491,8 @@ int loadRainbowTable(char *path) {
     // count the number of files to read
     count=0;
     while ((dirent = readdir(dir))!=NULL) {
+	if (strcmp(".",dirent->d_name)==0) continue;
+	if (strcmp("..",dirent->d_name)==0) continue;
 	// ignore entries that aren't regular files
 	//if (dirent->d_type != DT_REG) continue;
 	logMessage(log_fd, "testing dirent %s\n", dirent->d_name);
