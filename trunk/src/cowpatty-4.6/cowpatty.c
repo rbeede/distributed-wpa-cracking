@@ -1168,8 +1168,6 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
     memcpy(packet,type,len);
     packet[len++] = '\31';
 
-    printf("type=%s\tpacket=%s\n",type,packet);
-
     if (status!=NULL) {
 	if (strlen(status)+1>MAX_STR_LEN) return -1;
 	memcpy(&packet[len],status,strlen(status)+1);
@@ -1332,6 +1330,10 @@ int processConnection(int master_socket_fd) {
     char output_path[MAX_STR_LEN];  // path to output directory (if applicable)
     char ssid[MAX_STR_LEN];         // SSID
 
+    for (i=0; i<len; i++) {
+	logMessage(log_fd,"char %d of buffer: %d\n", i, buffer[i]);
+    }
+
     // clear buffers
     memset(message,      0, MAX_STR_LEN);
     memset(jobid,        0, MAX_STR_LEN);
@@ -1346,7 +1348,7 @@ int processConnection(int master_socket_fd) {
 		       message, jobid, capture_path, output_path);
 	    break;
 	} else if (buffer[i] == '\31') {
-logMessage(log_fd, "DEBUG got 31 char\n");
+	    logMessage(log_fd, "DEBUG got 31 char\n");
 	    sub_i = 0;
 	    sub_count++;
 	} else {
@@ -1629,7 +1631,7 @@ int main(int argc, char **argv) {
     logMessage(log_fd,"Command line arguments parsed\n");
 
     // load rainbow table into memory
-    int ret = loadRainbowTable(rainbow_table_path);
+    int ret;/* = loadRainbowTable(rainbow_table_path);
     if (ret<0) {
 	logMessage(log_fd,"Unable to load rainbow table\n");
         exit(EXIT_FAILURE);
@@ -1637,7 +1639,7 @@ int main(int argc, char **argv) {
 	status = LOADED;
 	logMessage(log_fd,"Rainbow table loaded\n");
     }
-    num_ssid = ret;
+    num_ssid = ret;*/
 
     // create thread for communication
     pthread_t comm_thread;
