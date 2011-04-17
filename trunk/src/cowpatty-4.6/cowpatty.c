@@ -66,6 +66,7 @@
 #define RUNNING 2
 #define FINISHED 3
 #define KILLED 4
+#define NOTLOADED 5
 
 /* Globals */
 pcap_t *p = NULL;
@@ -83,7 +84,7 @@ struct ssid_table {
         char *ssid;
         unsigned char *buffer;
 };
-int status = 0;
+int status = NOTLOADED;
 char rainbow_table_path[MAX_STR_LEN];
 int port_num;
 int log_fd;
@@ -1639,7 +1640,7 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     } else {
 	status = LOADED;
-	logMessage(log_fd,"Rainbow table loaded\n");
+	logMessage(log_fd,"Rainbow table loaded with %d SSIDs\n", num_ssid);
     }
     num_ssid = ret;
 
