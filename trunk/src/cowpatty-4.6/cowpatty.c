@@ -1188,10 +1188,6 @@ int sendPacket(int sockfd,char* type,char* status,char* jobid) {
     packet[len] = (char)4;
     len++;
 
-    int i;
-    for (i=0; i<len; i++) {
-	logMessage(log_fd, "%d of packet: %c\n", i, packet[i]);
-    }
     int n = write(sockfd, packet, len);
     
     return n;
@@ -1348,26 +1344,26 @@ int processConnection(int master_socket_fd) {
     
     // parse packet
     for (i=0; i<len; i++) {
-		if (buffer[i] == (char) 4) {
-			logMessage(log_fd,"RECEIVED: %s %s %s %s %s\n",
-				   message, jobid, capture_path, output_path, ssid);
-			break;
-		} else if (buffer[i] == (char) 31) {
-			sub_i = 0;
-			sub_count++;
-		} else {
-			switch (sub_count) {
-			case 0: message[sub_i]      = buffer[i]; break;
-			case 1: jobid[sub_i]        = buffer[i]; break;
-			case 2: capture_path[sub_i] = buffer[i]; break;
-			case 3: output_path[sub_i]  = buffer[i]; break;
-			case 4: ssid[sub_i]         = buffer[i]; break;
-			default: break;
-			}
-			sub_i++;
-		}
+	if (buffer[i] == (char) 4) {
+	    logMessage(log_fd,"RECEIVED: %s %s %s %s %s\n",
+		       message, jobid, capture_path, output_path, ssid);
+	    break;
+	} else if (buffer[i] == (char) 31) {
+	    sub_i = 0;
+	    sub_count++;
+	} else {
+	    switch (sub_count) {
+	    case 0: message[sub_i]      = buffer[i]; break;
+	    case 1: jobid[sub_i]        = buffer[i]; break;
+	    case 2: capture_path[sub_i] = buffer[i]; break;
+	    case 3: output_path[sub_i]  = buffer[i]; break;
+	    case 4: ssid[sub_i]         = buffer[i]; break;
+	    default: break;
+	    }
+	    sub_i++;
+	}
     }
-
+    
     if (strcmp(message,"START")==0) {
 	// check if a job is running
 	if (status==RUNNING) {
