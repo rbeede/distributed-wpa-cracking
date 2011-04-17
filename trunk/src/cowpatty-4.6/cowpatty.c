@@ -1403,7 +1403,9 @@ int processConnection(int master_socket_fd) {
 	case KILLED:
 	    sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
 	    break;
-	default: break;
+	default: 
+	    sendPacket(master_socket_fd,"ERROR","Unknown status", NULL);
+	    break;
 	}
     } else if (strcmp(message,"KILLJOB")==0) {
 	int ret = pthread_cancel(currJob.thread);
