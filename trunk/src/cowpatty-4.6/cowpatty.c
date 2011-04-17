@@ -1492,7 +1492,7 @@ int loadRainbowTable(char *path) {
     count=0;
     while ((dirent = readdir(dir))!=NULL) {
 	// ignore entries that aren't regular files
-	if (dirent->d_type != DT_REG) continue;
+	//if (dirent->d_type != DT_REG) continue;
 	logMessage(log_fd, "testing dirent %s\n", dirent->d_name);
 	count++;
     }
@@ -1508,7 +1508,7 @@ int loadRainbowTable(char *path) {
     // open entries in directory
     while ((dirent = readdir(dir))!=NULL) {
 	// ignore entries that aren't regular files
-	if (dirent->d_type != DT_REG) continue;
+	//if (dirent->d_type != DT_REG) continue;
 
 	// create path to file
 	memset(temp_path,0,MAX_STR_LEN);
