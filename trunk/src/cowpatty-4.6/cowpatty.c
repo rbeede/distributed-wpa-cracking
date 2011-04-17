@@ -1332,8 +1332,8 @@ int processConnection(int master_socket_fd) {
     // read packet
     len = read(master_socket_fd, buffer, MAX_PKT_LEN);
     if (len < 0) {
-	logMessage(log_fd,"Error while reading from socket\n");
-	return -1;
+		logMessage(log_fd,"Error while reading from socket\n");
+		return -1;
     }
 
     int i;            // for loop counter
