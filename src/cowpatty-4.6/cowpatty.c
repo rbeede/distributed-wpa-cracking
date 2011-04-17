@@ -1064,7 +1064,7 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 }
 
 int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
-			 struct crack_data *cdata,struct ssid_table *raint) {
+			 struct crack_data *cdata,unsigned char* raint) {
 	
     int reclen, wordlen, i;
     u8 pmk[32];
@@ -1072,10 +1072,6 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
     u8 keymic[16];
     struct wpa_ptk *ptkset;
     struct hashdb_rec rec;
-    
-    //TODO: get SSID from file
-    //TODO: shouldn't need to look through all tables, just the one
-    // with the corresponding SSID
     
     while (i<(end_offset-start_offset+1)) {
 	
@@ -1162,8 +1158,8 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
 int sendPacket(int sockfd,char* type,char* status,char* jobid) {
 
     char buffer[MAX_STR_LEN],packet[MAX_PKT_LEN];
-    memset(&buffer,0,MAX_STR_LEN);
-    memset(&packet,0,MAX_PKT_LEN);
+    memset(buffer,0,MAX_STR_LEN);
+    memset(packet,0,MAX_PKT_LEN);
 
     if (type==NULL) return -1;
     int len = strlen(type)+1;
@@ -1632,9 +1628,8 @@ int main(int argc, char **argv) {
     //TODO: test opts
     logMessage(log_fd,"Command line arguments parsed\n");
 
-    int ret;
     // load rainbow table into memory
-    /*int ret = loadRainbowTable(rainbow_table_path);
+    int ret = loadRainbowTable(rainbow_table_path);
     if (ret<0) {
 	logMessage(log_fd,"Unable to load rainbow table\n");
         exit(EXIT_FAILURE);
@@ -1642,7 +1637,7 @@ int main(int argc, char **argv) {
 	status = LOADED;
 	logMessage(log_fd,"Rainbow table loaded\n");
     }
-    num_ssid = ret;*/
+    num_ssid = ret;
 
     // create thread for communication
     pthread_t comm_thread;
