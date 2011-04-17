@@ -1344,8 +1344,8 @@ int processConnection(int master_socket_fd) {
     // parse packet
     for (i=0; i<len; i++) {
 		if (buffer[i] == (char) 4) {
-			logMessage(log_fd,"RECEIVED: %s %s %s %s\n",
-				   message, jobid, capture_path, output_path);
+			logMessage(log_fd,"RECEIVED: %s %s %s %s %s\n",
+				   message, jobid, capture_path, output_path, ssid);
 			break;
 		} else if (buffer[i] == (char) 31) {
 			logMessage(log_fd, "DEBUG got 31 char\n");
