@@ -1376,30 +1376,30 @@ int processConnection(int master_socket_fd) {
     }
     
     if (strcmp(message,"START")==0) {
-	// check if a job is running
-	if (status==RUNNING) {
-	    sendPacket(master_socket_fd,"ERROR",
-		       "Another job is still running",NULL);
-	    return 0;
-	}
-	// clear memory
-	memset(&currJob,              0,             sizeof(struct job));
-	memcpy(&currJob.jobid,        &jobid,        MAX_STR_LEN);
-	memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
-	memcpy(&currJob.output_path,  &output_path,  MAX_STR_LEN);
-	memcpy(&currJob.ssid,         &ssid,         MAX_STR_LEN);
-	
-	// start worker thread
-	int ret = pthread_create(&currJob.thread,NULL,getCracking,NULL);
-	if (ret<0) {
-	    sendPacket(master_socket_fd,"ERROR",
-		       "Unable to create thread to perform work",NULL);
-	    return 0;
-	}
-	logMessage(log_fd,"Job started\n");
-	// job started successfully
-	status = RUNNING;
-	sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
+		// check if a job is running
+		if (status==RUNNING) {
+			sendPacket(master_socket_fd,"ERROR",
+				   "Another job is still running",NULL);
+			return 0;
+		}
+		// clear memory
+		memset(&currJob,              0,             sizeof(struct job));
+		memcpy(&currJob.jobid,        &jobid,        MAX_STR_LEN);
+		memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
+		memcpy(&currJob.output_path,  &output_path,  MAX_STR_LEN);
+		memcpy(&currJob.ssid,         &ssid,         MAX_STR_LEN);
+		
+		// start worker thread
+		int ret = pthread_create(&currJob.thread,NULL,getCracking,NULL);
+		if (ret<0) {
+			sendPacket(master_socket_fd,"ERROR",
+				   "Unable to create thread to perform work",NULL);
+			return 0;
+		}
+		logMessage(log_fd,"Job started\n");
+		// job started successfully
+		status = RUNNING;
+		sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
     } else if (strcmp(message,"STATUS")==0) {
 	int ret;
 	switch(status) {
