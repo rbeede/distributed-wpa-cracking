@@ -1252,6 +1252,7 @@ void* getCracking(void* arg) {
 	  cdata.anonceset && cdata.keymicset && cdata.eapolframeset)) {
 	logMessage(log_fd,"End of pcap capture file, incomplete four-way "
 		   "handshake exchange.  Try using a different capture.\n");
+	status = FINISHED;
 	return NULL;
     } else {
 	if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
