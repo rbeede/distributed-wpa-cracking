@@ -247,7 +247,7 @@ int main(int argc, char **argv)
 		if (fret < 8 || fret > 63) {
 			if (opt.verbose) {
 				printf("Invalid passphrase length: %s (%u).\n",
-				       passphrase, strlen(passphrase));
+				       passphrase, (unsigned int) strlen(passphrase));
 			}
 			continue;
 		} else {
