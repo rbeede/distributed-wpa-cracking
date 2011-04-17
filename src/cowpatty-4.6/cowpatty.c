@@ -1219,7 +1219,7 @@ void* getCracking(void* arg) {
             sizeof(capdata.pcapfilename));
     if (openpcap(&capdata) != 0) {
 	logMessage(log_fd,"Unsupported or unrecognized pcap file.\n");
-	return NULL;
+	pthread_exit(NULL);
     }
 
     //TODO: opt.verbose,opt.checkonly, opt.nonstrict will default to 0
@@ -1253,7 +1253,7 @@ void* getCracking(void* arg) {
 	logMessage(log_fd,"End of pcap capture file, incomplete four-way "
 		   "handshake exchange.  Try using a different capture.\n");
 	status = FINISHED;
-	return NULL;
+	pthread_exit(NULL);
     } else {
 	if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
 	    logMessage(log_fd, "Collected all necessary data to mount crack"
@@ -1293,15 +1293,14 @@ void* getCracking(void* arg) {
             if(!strcmp(ssid_entry->ssid,currJob.ssid))
                 break;
     }
-    if(i>=num_ssid)
-    {
-        exit(-1);
+    if(i>=num_ssid) {
+	pthread_exit(NULL);
     }
     
-	ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
-	if (ret==0) {
-	    logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
-	}
+    ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
+    if (ret==0) {
+	logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
+    }
     gettimeofday(&end, 0);
     if (ret!=0) {
 	logMessage(log_fd,"NO SOLUTION\n");
