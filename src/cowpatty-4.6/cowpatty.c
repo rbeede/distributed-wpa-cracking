@@ -1336,7 +1336,12 @@ int processConnection(int master_socket_fd) {
     memset(buffer, 0, MAX_PKT_LEN);
 
     // read packet
-    len = read(master_socket_fd, buffer, MAX_PKT_LEN);
+	int partialReadByteNum = 0;
+    len = 0;
+	while((partialReadByteNum = read(master_socket_fd, &buffer[len], MAX_PKT_LEN-len)) > 0) {
+		len += partialReadByteNum;
+	}
+
     if (len < 0) {
 		logMessage(log_fd,"Error while reading from socket\n");
 		return -1;
@@ -1388,7 +1393,7 @@ int processConnection(int master_socket_fd) {
 		}
 	}
 	if(0 == sawEoT) {
-		logMessage(log_fd, "Didn't see EoT in packet from remote master!  len was %d", len);
+		logMessage(log_fd, "Didn't see EoT in packet from remote master!  len was %d\n", len);
 		sendPacket(master_socket_fd,"ERROR",
 				   "You didn't send a EoT",NULL);
 		return 0;
