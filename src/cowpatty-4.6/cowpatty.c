@@ -1219,6 +1219,7 @@ void* getCracking(void* arg) {
             sizeof(capdata.pcapfilename));
     if (openpcap(&capdata) != 0) {
 	logMessage(log_fd,"Unsupported or unrecognized pcap file.\n");
+	status = FINISHED;
 	pthread_exit(NULL);
     }
 
@@ -1294,6 +1295,7 @@ void* getCracking(void* arg) {
                 break;
     }
     if(i>=num_ssid) {
+	status = FINISHED;
 	pthread_exit(NULL);
     }
     
@@ -1372,11 +1374,11 @@ int processConnection(int master_socket_fd) {
 	    return 0;
 	}
 	// clear memory
-	memset(&currJob,              0,sizeof(struct job));
-	memcpy(&currJob.jobid,        &jobid, MAX_STR_LEN);
+	memset(&currJob,              0,             sizeof(struct job));
+	memcpy(&currJob.jobid,        &jobid,        MAX_STR_LEN);
 	memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
-	memcpy(&currJob.output_path,  &output_path, MAX_STR_LEN);
-	memcpy(&currJob.ssid,         &ssid, MAX_STR_LEN);
+	memcpy(&currJob.output_path,  &output_path,  MAX_STR_LEN);
+	memcpy(&currJob.ssid,         &ssid,         MAX_STR_LEN);
 	
 	// start worker thread
 	int ret = pthread_create(&currJob.thread,NULL,getCracking,NULL);
