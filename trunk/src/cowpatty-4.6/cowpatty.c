@@ -1290,7 +1290,7 @@ void* getCracking(void* arg) {
     struct ssid_table *ssid_entry;
     for (i=0; i<num_ssid; i++) {
             ssid_entry = rainbow_table[i];
-            if(!strcmp(ssid_entry,currJob.ssid))
+            if(!strcmp(ssid_entry->ssid,currJob.ssid))
                 break;
     }
     if(i>=num_ssid)
