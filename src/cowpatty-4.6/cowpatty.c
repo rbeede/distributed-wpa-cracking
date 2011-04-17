@@ -170,7 +170,7 @@ int logMessage(int fd, const char* format, ...) {
 }
 
 void fatal(const char *msg) {
-    perror(msg);
+    //perror(msg);
     exit(1);
 }
 
@@ -353,7 +353,7 @@ int openpcap(struct capture_data *capdata)
     logMessage(log_fd, "after pcap offline\n");
     if (p == NULL) {
 	logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
-	perror("Unable to open capture file");
+	//perror("Unable to open capture file");
 	return (-1);
     }
     
