@@ -1493,8 +1493,10 @@ int loadRainbowTable(char *path) {
     while ((dirent = readdir(dir))!=NULL) {
 	// ignore entries that aren't regular files
 	if (dirent->d_type != DT_REG) continue;
+	logMessage(log_fd, "testing dirent %s\n", dirent->d_name);
 	count++;
     }
+    logMessage(log_fd, "Found %d dirents in %s\n", count, path);
 
     // rewind dirent pointer to beginning
     rewinddir(dir);
@@ -1511,13 +1513,14 @@ int loadRainbowTable(char *path) {
 	// create path to file
 	memset(temp_path,0,MAX_STR_LEN);
 	snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
+	logMessage(log_fd, "Trying path %s\n", temp_path);
     
-    // allocate memory to ssid entry and ssid name
-    ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
-    ssid_entry->ssid = (char*)malloc(strlen(dirent->d_name)*sizeof(char));
-    
-    //copy hash file name to ssid name
-    strcpy(ssid_entry->ssid, dirent->d_name);
+	// allocate memory to ssid entry and ssid name
+	ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
+	ssid_entry->ssid = (char*)malloc(strlen(dirent->d_name)*sizeof(char));
+	
+	//copy hash file name to ssid name
+	strcpy(ssid_entry->ssid, dirent->d_name);
     
 	// open file
 	fd = open(temp_path,O_RDONLY);
