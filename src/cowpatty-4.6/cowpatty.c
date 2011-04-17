@@ -348,9 +348,9 @@ int openpcap(struct capture_data *capdata)
 {
     
     /* Assume for now it's a libpcap file */
-    logMessage(log_fd, "opening pcap offline: %s\n", capdata->pcapfilename);
+    //logMessage(log_fd, "opening pcap offline: %s\n", capdata->pcapfilename);
     p = pcap_open_offline(capdata->pcapfilename, errbuf);
-    logMessage(log_fd, "after pcap offline\n");
+    //logMessage(log_fd, "after pcap offline\n");
     if (p == NULL) {
 	logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
 	//perror("Unable to open capture file");
@@ -358,9 +358,9 @@ int openpcap(struct capture_data *capdata)
     }
     
     /* Determine link type */
-    logMessage(log_fd, "determine link type\n");
+    //logMessage(log_fd, "determine link type\n");
     capdata->pcaptype = pcap_datalink(p);
-    logMessage(log_fd, "after determine link type\n");
+    //logMessage(log_fd, "after determine link type\n");
     
     /* Determine offset to EAP frame based on link type */
     switch (capdata->pcaptype) {
@@ -374,7 +374,7 @@ int openpcap(struct capture_data *capdata)
 	/* Unknown/unsupported pcap type */
 	return (1);
     }
-    logMessage(log_fd, "after determine offset\n");
+    //logMessage(log_fd, "after determine offset\n");
     
     return (0);
 }
@@ -1214,7 +1214,7 @@ void* getCracking(void* arg) {
     char passphrase[MAXPASSLEN + 1];
 
     // clear structs
-    logMessage(log_fd, "clearing structs\n");
+    //logMessage(log_fd, "clearing structs\n");
     memset(&opt,            0, sizeof(struct user_opt));
     memset(&capdata,        0, sizeof(struct capture_data));
     memset(&cdata,          0, sizeof(struct crack_data));
@@ -1222,10 +1222,10 @@ void* getCracking(void* arg) {
     
     // Populate capdata struct
     //TODO: check on these sizes
-    logMessage(log_fd, "strncpy\n");
+    //logMessage(log_fd, "strncpy\n");
     strncpy(capdata.pcapfilename, currJob.capture_path,
             sizeof(capdata.pcapfilename));
-    logMessage(log_fd, "opening pcap\n");
+    //logMessage(log_fd, "opening pcap\n");
     if (openpcap(&capdata) != 0) {
 	logMessage(log_fd,"Unsupported or unrecognized pcap file.\n");
 	status = FINISHED;
@@ -1237,7 +1237,7 @@ void* getCracking(void* arg) {
     opt.verbose = 2;
     
     /* populates global *packet */
-    logMessage(log_fd, "calling get packet\n");
+    //logMessage(log_fd, "calling get packet\n");
     while (getpacket(&capdata) > 0) {
 	if (opt.verbose > 2) {
 	    lamont_hdump(packet, h->len);
@@ -1257,7 +1257,7 @@ void* getCracking(void* arg) {
 	}
     }
     
-    logMessage(log_fd, "closing pcap\n");
+    //logMessage(log_fd, "closing pcap\n");
     closepcap(&capdata);
     
     if (!(cdata.aaset && cdata.spaset && cdata.snonceset &&
@@ -1298,7 +1298,7 @@ void* getCracking(void* arg) {
 
     gettimeofday(&start, 0);
     
-    logMessage(log_fd, "finding ssid\n");
+    //logMessage(log_fd, "finding ssid\n");
     int i;
     struct ssid_table *ssid_entry;
     for (i=0; i<num_ssid; i++) {
@@ -1306,13 +1306,13 @@ void* getCracking(void* arg) {
             if(!strcmp(ssid_entry->ssid,currJob.ssid))
                 break;
     }
-    logMessage(log_fd, "i>num_ssid\n");
+    //logMessage(log_fd, "i>num_ssid\n");
     if(i>=num_ssid) {
 	status = FINISHED;
 	pthread_exit(NULL);
     }
     
-    logMessage(log_fd, "before hash file attack\n");
+    //logMessage(log_fd, "before hash file attack\n");
     ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
     if (ret==0) {
 	logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
@@ -1322,7 +1322,7 @@ void* getCracking(void* arg) {
 	logMessage(log_fd,"NO SOLUTION\n");
     }
     
-    logMessage(log_fd, "exiting\n");
+    //logMessage(log_fd, "exiting\n");
     status = FINISHED;
     pthread_exit(NULL);
 }
@@ -1336,15 +1336,15 @@ int processConnection(int master_socket_fd) {
     memset(buffer, 0, MAX_PKT_LEN);
 
     // read packet
-	int partialReadByteNum = 0;
+    int partialReadByteNum = 0;
     len = 0;
-	while((partialReadByteNum = read(master_socket_fd, &buffer[len], MAX_PKT_LEN-len)) > 0) {
-		len += partialReadByteNum;
-	}
-
+    while((partialReadByteNum = read(master_socket_fd, &buffer[len], MAX_PKT_LEN-len)) > 0) {
+	len += partialReadByteNum;
+    }
+    
     if (len < 0) {
-		logMessage(log_fd,"Error while reading from socket\n");
-		return -1;
+	logMessage(log_fd,"Error while reading from socket\n");
+	return -1;
     }
 
     int i;            // for loop counter
