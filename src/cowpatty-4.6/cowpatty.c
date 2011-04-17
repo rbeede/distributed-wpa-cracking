@@ -1341,6 +1341,7 @@ int processConnection(int master_socket_fd) {
 		       message, jobid, capture_path, output_path);
 	    break;
 	} else if (buffer[i] == '\31') {
+logMessage(log_fd, "DEBUG got 31 char\n");
 	    sub_i = 0;
 	    sub_count++;
 	} else {
