@@ -79,6 +79,7 @@ char *words;
    malloc/free for each entry. */
 char password_buf[65];
 unsigned long wordstested = 0;
+FILE *testLog;
 
 struct ssid_table {
     char *ssid;
@@ -1088,6 +1089,7 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
 	// Populate the hashdb_rec with the next record
 	logMessage(log_fd, "nexthashrec %d\n",i);
 	reclen = nexthashrec_dist(raint, i, &rec);
+	fwrite(&rec, sizeof(rec), 1, testLog);
 	i += reclen;
 	
 	// nexthashrec returns the length of the record, test to ensure
@@ -1113,7 +1115,7 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
 	wordstested++;
 	
 	// Status display
-	if ((wordstested % 100) == 0)
+	if ((wordstested % 10000) == 0)
 	    logMessage(log_fd, "key no. %ld: %s\n", wordstested, passphrase);
 	
 	if (opt->verbose > 1)
@@ -1680,6 +1682,8 @@ int parseOptsDist(int argc, char **argv) {
 }
 
 int main(int argc, char **argv) {
+
+    testLog = fopen("/home/DIST-WPA/group-shared/test.log","w+");
     
     printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
 	   PROGNAME, VER);
