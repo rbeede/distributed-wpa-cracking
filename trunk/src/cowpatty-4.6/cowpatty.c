@@ -169,74 +169,65 @@ int logMessage(int fd, const char* format, ...) {
     return 0;
 }
 
-void fatal(const char *msg) {
-    //perror(msg);
-    exit(1);
-}
-
-void usage(char *message)
-{
-
-	if (strlen(message) > 0) {
-		printf("%s: %s\n", PROGNAME, message);
-	}
-
-	printf("\nUsage: %s [options]\n", PROGNAME);
-	printf("\n"
-	       "\t-f \tDictionary file\n"
-	       "\t-d \tHash file (genpmk)\n"
-	       "\t-r \tPacket capture file\n"
-	       "\t-s \tNetwork SSID (enclose in quotes if SSID includes spaces)\n"
-	       "\t-2 \tUse frames 1 and 2 or 2 and 3 for key attack (nonstrict mode)\n"
+void usage(char *message) {
+    
+    if (strlen(message) > 0) {
+	printf("%s: %s\n", PROGNAME, message);
+    }
+    
+    printf("\nUsage: %s [options]\n", PROGNAME);
+    printf("\n"
+	   "\t-f \tDictionary file\n"
+	   "\t-d \tHash file (genpmk)\n"
+	   "\t-r \tPacket capture file\n"
+	   "\t-s \tNetwork SSID (enclose in quotes if SSID includes spaces)\n"
+	   "\t-2 \tUse frames 1 and 2 or 2 and 3 for key attack (nonstrict mode)\n"
            "\t-c \tCheck for valid 4-way frames, does not crack\n"
-	       "\t-h \tPrint this help information and exit\n"
-	       "\t-v \tPrint verbose information (more -v for more verbosity)\n"
-	       "\t-V \tPrint program version and exit\n" "\n");
+	   "\t-h \tPrint this help information and exit\n"
+	   "\t-v \tPrint verbose information (more -v for more verbosity)\n"
+	   "\t-V \tPrint program version and exit\n" "\n");
 }
 
-void cleanup()
-{
-	/* lame-o-meter++ */
-	sig = 1;
+void cleanup() {
+    /* lame-o-meter++ */
+    sig = 1;
 }
 
 void wpa_pmk_to_ptk(u8 * pmk, u8 * addr1, u8 * addr2,
-		    u8 * nonce1, u8 * nonce2, u8 * ptk, size_t ptk_len)
-{
-	u8 data[2 * ETH_ALEN + 2 * 32];
-
-	memset(&data, 0, sizeof(data));
-
-	/* PTK = PRF-X(PMK, "Pairwise key expansion",
-	 *             Min(AA, SA) || Max(AA, SA) ||
-	 *             Min(ANonce, SNonce) || Max(ANonce, SNonce)) */
-
-	if (memcmp(addr1, addr2, ETH_ALEN) < 0) {
-		memcpy(data, addr1, ETH_ALEN);
-		memcpy(data + ETH_ALEN, addr2, ETH_ALEN);
-	} else {
-		memcpy(data, addr2, ETH_ALEN);
-		memcpy(data + ETH_ALEN, addr1, ETH_ALEN);
-	}
-
-	if (memcmp(nonce1, nonce2, 32) < 0) {
-		memcpy(data + 2 * ETH_ALEN, nonce1, 32);
-		memcpy(data + 2 * ETH_ALEN + 32, nonce2, 32);
-	} else {
-		memcpy(data + 2 * ETH_ALEN, nonce2, 32);
-		memcpy(data + 2 * ETH_ALEN + 32, nonce1, 32);
-	}
-
-	sha1_prf(pmk, 32, "Pairwise key expansion", data, sizeof(data),
-		 ptk, ptk_len);
+		    u8 * nonce1, u8 * nonce2, u8 * ptk, size_t ptk_len) {
+    u8 data[2 * ETH_ALEN + 2 * 32];
+    
+    memset(&data, 0, sizeof(data));
+    
+    /* PTK = PRF-X(PMK, "Pairwise key expansion",
+     *             Min(AA, SA) || Max(AA, SA) ||
+     *             Min(ANonce, SNonce) || Max(ANonce, SNonce)) */
+    
+    if (memcmp(addr1, addr2, ETH_ALEN) < 0) {
+	memcpy(data, addr1, ETH_ALEN);
+	memcpy(data + ETH_ALEN, addr2, ETH_ALEN);
+    } else {
+	memcpy(data, addr2, ETH_ALEN);
+	memcpy(data + ETH_ALEN, addr1, ETH_ALEN);
+    }
+    
+    if (memcmp(nonce1, nonce2, 32) < 0) {
+	memcpy(data + 2 * ETH_ALEN, nonce1, 32);
+	memcpy(data + 2 * ETH_ALEN + 32, nonce2, 32);
+    } else {
+	memcpy(data + 2 * ETH_ALEN, nonce2, 32);
+	memcpy(data + 2 * ETH_ALEN + 32, nonce1, 32);
+    }
+    
+    sha1_prf(pmk, 32, "Pairwise key expansion", data, sizeof(data),
+	     ptk, ptk_len);
 }
 
-void hexdump(unsigned char *data, int len)
-{
-	int i;
-	for (i = 0; i < len; i++) {
-		printf("%02x ", data[i]);
-	}
+void hexdump(unsigned char *data, int len) {
+    int i;
+    for (i = 0; i < len; i++) {
+	printf("%02x ", data[i]);
+    }
 }
 
 void parseopts(struct user_opt *opt, int argc, char **argv)
@@ -344,25 +335,19 @@ void testopts(struct user_opt *opt)
 	}
 }
 
-int openpcap(struct capture_data *capdata)
-{
+int openpcap(struct capture_data *capdata) {
     
-    /* Assume for now it's a libpcap file */
-    //logMessage(log_fd, "opening pcap offline: %s\n", capdata->pcapfilename);
+    // Assume for now it's a libpcap file
     p = pcap_open_offline(capdata->pcapfilename, errbuf);
-    //logMessage(log_fd, "after pcap offline\n");
     if (p == NULL) {
 	logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
-	//perror("Unable to open capture file");
 	return (-1);
     }
     
-    /* Determine link type */
-    //logMessage(log_fd, "determine link type\n");
+    // Determine link type
     capdata->pcaptype = pcap_datalink(p);
-    //logMessage(log_fd, "after determine link type\n");
     
-    /* Determine offset to EAP frame based on link type */
+    // Determine offset to EAP frame based on link type
     switch (capdata->pcaptype) {
     case DLT_NULL:
     case DLT_EN10MB:
@@ -371,140 +356,136 @@ int openpcap(struct capture_data *capdata)
 	case DLT_IEEE802_11_RADIO:
 	break;
     default:
-	/* Unknown/unsupported pcap type */
+	// Unknown/unsupported pcap type
 	return (1);
     }
-    //logMessage(log_fd, "after determine offset\n");
     
     return (0);
 }
 
-void closepcap(struct capture_data *capdata)
-{
-
-	/* Assume it's a libpcap file for now */
-	pcap_close(p);
+void closepcap(struct capture_data *capdata) {
+    /* Assume it's a libpcap file for now */
+    pcap_close(p);
 }
 
 /* Populates global *packet, returns status */
-int getpacket(struct capture_data *capdata)
-{
-	/* Assume it's a libpcap file for now */
-	int ret;
-	struct ieee80211_radiotap_header *rtaphdr;
-	int rtaphdrlen=0;
-	struct dot11hdr *dot11 = NULL;
-
-	/* Loop on pcap_next_ex until we get a packet we want, return from
-	 * this while loop.  This is kinda hack.
-	 */
-	while ((ret = pcap_next_ex(p, &h, (const u_char **)&packet)) 
-			&& ret > 0) {
-
-		/* Determine offset to EAP frame based on link type */
-		switch (capdata->pcaptype) {
-		case DLT_NULL:
-		case DLT_EN10MB:
-			/* Standard ethernet header */
-			capdata->dot1x_offset = 14;
-			capdata->l2type_offset = 12;
-			capdata->dstmac_offset = 0;
-			capdata->srcmac_offset = 6;
-			return(ret);
-			break;
-
-		case DLT_IEEE802_11:
-			/* If this is not a data packet, get the next frame */
-			dot11 = (struct dot11hdr *)packet;
-			if (dot11->u1.fc.type != DOT11_FC_TYPE_DATA) {
-				continue;
-			}
-
-			capdata->dstmac_offset = 4;
-			capdata->srcmac_offset = 10;
-
-			/* differentiate QoS data and non-QoS data frames */
-			if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_QOSDATA) {
-				/* 26 bytes 802.11 header, 8 for 802.2 header */
-				capdata->dot1x_offset = 34;
-				capdata->l2type_offset = 32;
-			} else if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_DATA) {
-				/* 24 bytes 802.11 header, 8 for 802.2 header */
-				capdata->dot1x_offset = 32;
-				capdata->l2type_offset = 30;
-			} else {
-				/* Not a data frame we support */
-				continue;
-			}
-			return(ret);
-			break;
-
-		case DLT_PRISM_HEADER:
-			/* 802.11 frames with AVS header, AVS header is 144
-			 * bytes */
-			 
-			/* If this is not a data packet, get the next frame */
-			dot11 = ((struct dot11hdr *)(packet+144));
-			if (dot11->u1.fc.type != DOT11_FC_TYPE_DATA) {
-				continue;
-			}
-			capdata->dstmac_offset = 4 + 144;
-			capdata->srcmac_offset = 10 + 144;
-
-			/* differentiate QoS data and non-QoS data frames */
-			if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_QOSDATA) {
-				capdata->dot1x_offset = 34 + 144;
-				capdata->l2type_offset = 32 + 144;
-			} else if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_DATA) {
-				capdata->dot1x_offset = 32 + 144;
-				capdata->l2type_offset = 30 + 144;
-			} else {
-				/* Not a data frame we support */
-				continue;
-			}
-			return(ret);
-			break;
-
-		case DLT_IEEE802_11_RADIO:
-			/* Radiotap header, need to calculate offset to payload
-			   on a per-packet basis.
-			*/
-			rtaphdr = (struct ieee80211_radiotap_header *)packet;
-			/* rtap is LE */
-			rtaphdrlen = le16_to_cpu(rtaphdr->it_len); 
+int getpacket(struct capture_data *capdata) {
+    /* Assume it's a libpcap file for now */
+    int ret;
+    struct ieee80211_radiotap_header *rtaphdr;
+    int rtaphdrlen=0;
+    struct dot11hdr *dot11 = NULL;
+    
+    /* Loop on pcap_next_ex until we get a packet we want, return from
+     * this while loop.  This is kinda hack.
+     */
+    while ((ret = pcap_next_ex(p, &h, (const u_char **)&packet)) 
+	   && ret > 0) {
 	
-			/* Sanity check on header length, 10 bytes is min 
-			   802.11 len */
-			if (rtaphdrlen > (h->len - 10)) {
-				return -2; /* Bad radiotap data */
-			}
-	
-			capdata->dstmac_offset = 4 + rtaphdrlen;
-			capdata->srcmac_offset = 10 + rtaphdrlen;
-
-			dot11 = ((struct dot11hdr *)(packet+rtaphdrlen));
-			/* differentiate QoS data and non-QoS data frames */
-			if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_QOSDATA) {
-				capdata->dot1x_offset = 34 + rtaphdrlen;
-				capdata->l2type_offset = 32 + rtaphdrlen;
-			} else if (dot11->u1.fc.subtype ==
-					DOT11_FC_SUBTYPE_DATA) {
-				capdata->dot1x_offset = 32 + rtaphdrlen;
-				capdata->l2type_offset = 30 + rtaphdrlen;
-			} else {
-				/* Not a data frame we support */
-				continue;
-			}
-			return(ret);
-			break;
-
-		default:
-			/* Unknown/unsupported pcap type */
-			return (1);
-		}
+	/* Determine offset to EAP frame based on link type */
+	switch (capdata->pcaptype) {
+	case DLT_NULL:
+	case DLT_EN10MB:
+	    /* Standard ethernet header */
+	    capdata->dot1x_offset = 14;
+	    capdata->l2type_offset = 12;
+	    capdata->dstmac_offset = 0;
+	    capdata->srcmac_offset = 6;
+	    return(ret);
+	    break;
+	    
+	case DLT_IEEE802_11:
+	    /* If this is not a data packet, get the next frame */
+	    dot11 = (struct dot11hdr *)packet;
+	    if (dot11->u1.fc.type != DOT11_FC_TYPE_DATA) {
+		continue;
+	    }
+	    
+	    capdata->dstmac_offset = 4;
+	    capdata->srcmac_offset = 10;
+	    
+	    /* differentiate QoS data and non-QoS data frames */
+	    if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_QOSDATA) {
+		/* 26 bytes 802.11 header, 8 for 802.2 header */
+		capdata->dot1x_offset = 34;
+		capdata->l2type_offset = 32;
+	    } else if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_DATA) {
+		/* 24 bytes 802.11 header, 8 for 802.2 header */
+		capdata->dot1x_offset = 32;
+		capdata->l2type_offset = 30;
+	    } else {
+		/* Not a data frame we support */
+		continue;
+	    }
+	    return(ret);
+	    break;
+	    
+	case DLT_PRISM_HEADER:
+	    /* 802.11 frames with AVS header, AVS header is 144
+	     * bytes */
+	    
+	    /* If this is not a data packet, get the next frame */
+	    dot11 = ((struct dot11hdr *)(packet+144));
+	    if (dot11->u1.fc.type != DOT11_FC_TYPE_DATA) {
+		continue;
+	    }
+	    capdata->dstmac_offset = 4 + 144;
+	    capdata->srcmac_offset = 10 + 144;
+	    
+	    /* differentiate QoS data and non-QoS data frames */
+	    if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_QOSDATA) {
+		capdata->dot1x_offset = 34 + 144;
+		capdata->l2type_offset = 32 + 144;
+	    } else if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_DATA) {
+		capdata->dot1x_offset = 32 + 144;
+		capdata->l2type_offset = 30 + 144;
+	    } else {
+		/* Not a data frame we support */
+		continue;
+	    }
+	    return(ret);
+	    break;
+	    
+	case DLT_IEEE802_11_RADIO:
+	    /* Radiotap header, need to calculate offset to payload
+	       on a per-packet basis.
+	    */
+	    rtaphdr = (struct ieee80211_radiotap_header *)packet;
+	    /* rtap is LE */
+	    rtaphdrlen = le16_to_cpu(rtaphdr->it_len); 
+	    
+	    /* Sanity check on header length, 10 bytes is min 
+	       802.11 len */
+	    if (rtaphdrlen > (h->len - 10)) {
+		return -2; /* Bad radiotap data */
+	    }
+	    
+	    capdata->dstmac_offset = 4 + rtaphdrlen;
+	    capdata->srcmac_offset = 10 + rtaphdrlen;
+	    
+	    dot11 = ((struct dot11hdr *)(packet+rtaphdrlen));
+	    /* differentiate QoS data and non-QoS data frames */
+	    if (dot11->u1.fc.subtype == DOT11_FC_SUBTYPE_QOSDATA) {
+		capdata->dot1x_offset = 34 + rtaphdrlen;
+		capdata->l2type_offset = 32 + rtaphdrlen;
+	    } else if (dot11->u1.fc.subtype ==
+		       DOT11_FC_SUBTYPE_DATA) {
+		capdata->dot1x_offset = 32 + rtaphdrlen;
+		capdata->l2type_offset = 30 + rtaphdrlen;
+	    } else {
+		/* Not a data frame we support */
+		continue;
+	    }
+	    return(ret);
+	    break;
+	    
+	default:
+	    /* Unknown/unsupported pcap type */
+	    return (1);
 	}
-
-	return (ret);
+    }
+    
+    return (ret);
 }
 
 void handle_dot1x(struct crack_data *cdata, struct capture_data *capdata,
@@ -1067,7 +1048,7 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
     struct wpa_ptk *ptkset;
     struct hashdb_rec rec;
     
-    logMessage(log_fd, "before  while in hashfileattack (-v %d)\n",
+    logMessage(log_fd, "before while in hashfileattack (-v %d)\n",
 	       opt->verbose);
     while (index<(end_offset-start_offset+1)) {
 	
