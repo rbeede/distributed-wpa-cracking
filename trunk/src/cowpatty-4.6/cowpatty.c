@@ -338,21 +338,23 @@ void testopts(struct user_opt *opt)
 int openpcap(struct capture_data *capdata) {
     
     // Assume for now it's a libpcap file
-    if (capdata->pcapfilename == NULL) 
-	logMessage(log_fd, "pcapfilename is null\n");
-    logMessage(log_fd, "pcap_open_offline: %s\n", capdata->pcapfilename);
+    if (capdata->pcapfilename == NULL) {
+		logMessage(log_fd, "pcapfilename is null\n");
+		return (1);
+	}
+    //logMessage(log_fd, "pcap_open_offline: %s\n", capdata->pcapfilename);
     p = pcap_open_offline(capdata->pcapfilename, errbuf);
     if (p == NULL) {
-	//logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
-	logMessage(log_fd, "Unable to open capture file\n");
-	return (-1);
+		//logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
+		logMessage(log_fd, "Unable to open capture file\n");
+		return (-1);
     }
     
     // Determine link type
-    logMessage(log_fd, "pcap_datalink\n");
+    //logMessage(log_fd, "pcap_datalink\n");
     capdata->pcaptype = pcap_datalink(p);
     
-    logMessage(log_fd, "switch\n");
+    //logMessage(log_fd, "switch\n");
     // Determine offset to EAP frame based on link type
     switch (capdata->pcaptype) {
     case DLT_NULL:
@@ -360,13 +362,13 @@ int openpcap(struct capture_data *capdata) {
     case DLT_IEEE802_11:
     case DLT_PRISM_HEADER:
 	case DLT_IEEE802_11_RADIO:
-	break;
+		break;
     default:
-	// Unknown/unsupported pcap type
-	return (1);
+		// Unknown/unsupported pcap type
+		return (1);
     }
     
-    logMessage(log_fd, "return\n");
+    //logMessage(log_fd, "return\n");
     return (0);
 }
 
@@ -744,10 +746,10 @@ int nexthashrec_dist(unsigned char* rt, long long index,
     
     int recordlength, wordlen;
     long long length = index;
-
+	
     if (memcpy(&rec->rec_size, rt+length, sizeof(rec->rec_size)) == NULL) {
-	logMessage(log_fd, "memcpy failed on &rec->rec_size\n");
-	return -1;
+		logMessage(log_fd, "memcpy failed on &rec->rec_size\n");
+		return -1;
     }
     length += sizeof(rec->rec_size);
     
@@ -755,22 +757,22 @@ int nexthashrec_dist(unsigned char* rt, long long index,
     wordlen = recordlength - (sizeof(rec->pmk) + sizeof(rec->rec_size));
     
     if (wordlen > 63 || wordlen < 8) {
-	logMessage(log_fd, "Invalid word length: %d\n", wordlen);
-	return -1;
+		logMessage(log_fd, "Invalid word length: %d\n", wordlen);
+		return -1;
     }
     
     // hackity, hack, hack, hack
     rec->word = password_buf;
     
     if (memcpy(rec->word, rt+length, wordlen)==NULL) {
-	logMessage(log_fd, "memcpy failed on rec->word\n");
-	return -1;
+		logMessage(log_fd, "memcpy failed on rec->word\n");
+		return -1;
     }
     length += wordlen;
     
     if (memcpy(rec->pmk, rt+length, sizeof(rec->pmk))==NULL) {
-	logMessage(log_fd, "memcpy failed on rec->pmk\n");
-	return -1;
+		logMessage(log_fd, "memcpy failed on rec->pmk\n");
+		return -1;
     }
     
     return recordlength;
@@ -1062,88 +1064,88 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
     struct wpa_ptk *ptkset;
     struct hashdb_rec rec;
     
-    logMessage(log_fd, "before while in hashfileattack (-v %d)\n",
-	       opt->verbose);
+    /*logMessage(log_fd, "before while in hashfileattack (-v %d)\n",
+	  opt->verbose);*/
     while (index<(end_offset-start_offset+1)) {
-	
-	// Populate the hashdb_rec with the next record
-	reclen = nexthashrec_dist(raint, index, &rec);
-	index += reclen;
-	
-	// nexthashrec returns the length of the record, test to ensure
-	//   passphrase is greater than 8 characters
-	wordlen = rec.rec_size - 
-	    (sizeof(rec.pmk) + sizeof(rec.rec_size));
-	if (wordlen < 8) {
-	    logMessage(log_fd, "Found a record that was too short, this "
-		   "shouldn't happen in practice!\n");
-	    return -1;
-	}
-	
-	// Populate passphrase with the record contents
-	if (memcpy(passphrase, rec.word, wordlen)==NULL) {
-	    logMessage(log_fd, "memcpy failed on passphrase\n");
-	    return -1;
-	}
-	
-	// NULL terminate passphrase string
-	passphrase[wordlen] = 0;
-	
-	if (opt->verbose > 1) 
-	    logMessage(log_fd,"Testing passphrase: %s\n", passphrase);
-	
-	// Increment the words tested counter
-	wordstested++;
-	
-	// Status display
-	if ((wordstested % 10000) == 0)
-	    logMessage(log_fd, "key no. %ld: %s\n", wordstested, passphrase);
-	
-	if (opt->verbose > 1)
-	    logMessage(log_fd, "Calculating PTK for \"%s\".\n", passphrase);
-	
-	//TODO: fix verbosity > 2 (lamont_hdump will print to stdout)
-	if (opt->verbose > 2) {
-	    printf("PMK is");
-	    lamont_hdump(pmk, sizeof(pmk));
-	}
-	
-	if (opt->verbose > 1)
-	    logMessage(log_fd,"Calculating PTK with collected data and "
-		       "PMK.\n");
-	
-	wpa_pmk_to_ptk(rec.pmk, cdata->aa, cdata->spa, cdata->anonce,
-		       cdata->snonce, ptk, sizeof(ptk));
-	
-	if (opt->verbose > 2) {
-	    printf("Calculated PTK for \"%s\" is", passphrase);
-	    lamont_hdump(ptk, sizeof(ptk));
-	}
-	
-	ptkset = (struct wpa_ptk *)ptk;
-	
-	if (opt->verbose > 1) 
-	    logMessage(log_fd,"Calculating hmac-MD5 Key MIC for this "
-		       "frame.\n");
-	
-	if (opt->nonstrict == 0) {
-	    hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
-		      sizeof(cdata->eapolframe), keymic);
-	} else {
-	    hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
-		      cdata->eapolframe_size, keymic);
-	}
-	
-	if (opt->verbose > 2) {
-	    printf("Calculated MIC with \"%s\" is", passphrase);
-	    lamont_hdump(keymic, sizeof(keymic));
-	}
-	
-	if (memcmp(&cdata->keymic, &keymic, sizeof(keymic)) == 0) {
-	    return 0;
-	} else {
-	    continue;
-	}
+		
+		// Populate the hashdb_rec with the next record
+		reclen = nexthashrec_dist(raint, index, &rec);
+		index += reclen;
+		
+		// nexthashrec returns the length of the record, test to ensure
+		//   passphrase is greater than 8 characters
+		wordlen = rec.rec_size - 
+			(sizeof(rec.pmk) + sizeof(rec.rec_size));
+		if (wordlen < 8) {
+			logMessage(log_fd, "Found a record that was too short, this "
+					   "shouldn't happen in practice!\n");
+			return -1;
+		}
+		
+		// Populate passphrase with the record contents
+		if (memcpy(passphrase, rec.word, wordlen)==NULL) {
+			logMessage(log_fd, "memcpy failed on passphrase\n");
+			return -1;
+		}
+		
+		// NULL terminate passphrase string
+		passphrase[wordlen] = 0;
+		
+		if (opt->verbose > 1) 
+			logMessage(log_fd,"Testing passphrase: %s\n", passphrase);
+		
+		// Increment the words tested counter
+		wordstested++;
+		
+		// Status display
+		if ((wordstested % 10000) == 0)
+			logMessage(log_fd, "key no. %ld: %s\n", wordstested, passphrase);
+		
+		if (opt->verbose > 1)
+			logMessage(log_fd, "Calculating PTK for \"%s\".\n", passphrase);
+		
+		//TODO: fix verbosity > 2 (lamont_hdump will print to stdout)
+		if (opt->verbose > 2) {
+			printf("PMK is");
+			lamont_hdump(pmk, sizeof(pmk));
+		}
+		
+		if (opt->verbose > 1)
+			logMessage(log_fd,"Calculating PTK with collected data and "
+					   "PMK.\n");
+		
+		wpa_pmk_to_ptk(rec.pmk, cdata->aa, cdata->spa, cdata->anonce,
+					   cdata->snonce, ptk, sizeof(ptk));
+		
+		if (opt->verbose > 2) {
+			printf("Calculated PTK for \"%s\" is", passphrase);
+			lamont_hdump(ptk, sizeof(ptk));
+		}
+		
+		ptkset = (struct wpa_ptk *)ptk;
+		
+		if (opt->verbose > 1) 
+			logMessage(log_fd,"Calculating hmac-MD5 Key MIC for this "
+					   "frame.\n");
+		
+		if (opt->nonstrict == 0) {
+			hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
+					  sizeof(cdata->eapolframe), keymic);
+		} else {
+			hmac_hash(cdata->ver, ptkset->mic_key, 16, cdata->eapolframe,
+					  cdata->eapolframe_size, keymic);
+		}
+		
+		if (opt->verbose > 2) {
+			printf("Calculated MIC with \"%s\" is", passphrase);
+			lamont_hdump(keymic, sizeof(keymic));
+		}
+		
+		if (memcmp(&cdata->keymic, &keymic, sizeof(keymic)) == 0) {
+			return 0;
+		} else {
+			continue;
+		}
     }
     
     return 1;
@@ -1211,55 +1213,55 @@ void* getCracking(void* arg) {
     //TODO: check on these sizes
     strncpy(capdata.pcapfilename, currJob.capture_path,
             sizeof(capdata.pcapfilename));
-    logMessage(log_fd,"opening pcap\n");
+    //logMessage(log_fd,"opening pcap\n");
     if (openpcap(&capdata) != 0) {
-	logMessage(log_fd,"Unsupported or unrecognized pcap file.\n");
-	status = FINISHED;
-	pthread_exit(NULL);
+		logMessage(log_fd,"Unsupported or unrecognized pcap file.\n");
+		status = FINISHED;
+		pthread_exit(NULL);
     }
 
     //TODO: opt.verbose,opt.checkonly, opt.nonstrict will default to 0
     // for testing purposes
-    opt.verbose = 2;
+    opt.verbose = 0;
     
     // populates global *packet
-    logMessage(log_fd, "populating packet\n");
+    //logMessage(log_fd, "populating packet\n");
     while (getpacket(&capdata) > 0) {
-	if (opt.verbose > 2) {
-	    lamont_hdump(packet, h->len);
-	}
-	// test packet for data that we are looking for
-	if (memcmp(&packet[capdata.l2type_offset], DOT1X_LLCTYPE, 2) ==
-	    0 && (h->len >
-		  capdata.l2type_offset + sizeof(struct wpa_eapol_key))) {
-	    // It's a dot1x frame, process it
-	    handle_dot1x(&cdata, &capdata, &opt);
-	    if (cdata.aaset && cdata.spaset && cdata.snonceset &&
-		cdata.anonceset && cdata.keymicset
-		&& cdata.eapolframeset) {
-		// We've collected everything we need.
-		break;
-	    }
-	}
+		if (opt.verbose > 2) {
+			lamont_hdump(packet, h->len);
+		}
+		// test packet for data that we are looking for
+		if (memcmp(&packet[capdata.l2type_offset], DOT1X_LLCTYPE, 2) ==
+			0 && (h->len >
+				  capdata.l2type_offset + sizeof(struct wpa_eapol_key))) {
+			// It's a dot1x frame, process it
+			handle_dot1x(&cdata, &capdata, &opt);
+			if (cdata.aaset && cdata.spaset && cdata.snonceset &&
+				cdata.anonceset && cdata.keymicset
+				&& cdata.eapolframeset) {
+				// We've collected everything we need.
+				break;
+			}
+		}
     }
     
-    logMessage(log_fd, "closing pcap\n");
+    //logMessage(log_fd, "closing pcap\n");
     closepcap(&capdata);
     
     if (!(cdata.aaset && cdata.spaset && cdata.snonceset &&
-	  cdata.anonceset && cdata.keymicset && cdata.eapolframeset)) {
-	logMessage(log_fd,"End of pcap capture file, incomplete four-way "
-		   "handshake exchange.  Try using a different capture.\n");
-	status = FINISHED;
-	pthread_exit(NULL);
+		  cdata.anonceset && cdata.keymicset && cdata.eapolframeset)) {
+		logMessage(log_fd,"End of pcap capture file, incomplete four-way "
+				   "handshake exchange.  Try using a different capture.\n");
+		status = FINISHED;
+		pthread_exit(NULL);
     } else {
-	if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
-	    logMessage(log_fd, "Collected all necessary data to mount crack"
-		   " against WPA2/PSK passphrase.\n");
-	} else if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_MD5_RC4) {
-	    logMessage(log_fd, "Collected all necessary data to mount crack"
-		   " against WPA/PSK passphrase.\n");
-	}
+		if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_SHA1_AES) {
+			logMessage(log_fd, "Collected all necessary data to mount crack"
+					   " against WPA2/PSK passphrase.\n");
+		} else if (cdata.ver == WPA_KEY_INFO_TYPE_HMAC_MD5_RC4) {
+			logMessage(log_fd, "Collected all necessary data to mount crack"
+					   " against WPA/PSK passphrase.\n");
+		}
     }
     
     /*
@@ -1273,50 +1275,50 @@ void* getCracking(void* arg) {
     
     // Zero mic and length data for hmac-md5 calculation
     eapkeypacket =
-	(struct wpa_eapol_key *)&cdata.eapolframe[EAPDOT1XOFFSET];
+		(struct wpa_eapol_key *)&cdata.eapolframe[EAPDOT1XOFFSET];
     memset(&eapkeypacket->key_mic, 0, sizeof(eapkeypacket->key_mic));
     if (opt.nonstrict == 0) {
-	eapkeypacket->key_data_length = 0;
+		eapkeypacket->key_data_length = 0;
     }
     
     gettimeofday(&start, 0);
     
-    logMessage(log_fd, "finding ssid\n");
+    //logMessage(log_fd, "finding ssid\n");
     int i;
     struct ssid_table *ssid_entry;
     for (i=0; i<num_ssid; i++) {
-            ssid_entry = rainbow_table[i];
-            if(!strcmp(ssid_entry->ssid,currJob.ssid))
-                break;
+		ssid_entry = rainbow_table[i];
+		if(!strcmp(ssid_entry->ssid,currJob.ssid))
+			break;
     }
     if(i>=num_ssid) {
-	status = FINISHED;
-	pthread_exit(NULL);
+		status = FINISHED;
+		pthread_exit(NULL);
     }
     
-    logMessage(log_fd, "starting hash file attack\n");
+    //logMessage(log_fd, "starting hash file attack\n");
     ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
     if (ret==0) {
-	logMessage(log_fd,"SOLUTION FOUND for job %s: %s\n",
-		   currJob.jobid,
-		   passphrase);
-	char solutionPath[MAX_PKT_LEN];
-	memset(solutionPath,0,MAX_PKT_LEN);
-	
-	snprintf(solutionPath,MAX_PKT_LEN,"%s/SOLUTION",currJob.output_path);
-	FILE *solutionFile = fopen(solutionPath,"w+");
-	if (solutionFile==NULL) {
-	    logMessage(log_fd, "Failed to open solution file: %s\n", 
-		       solutionPath);
-	} else {
-	    logMessage(log_fd,"Solution file opened: %s\n", solutionPath);
-	    fwrite(passphrase, strlen(passphrase)+1, 1, solutionFile);
-	    fclose(solutionFile);
-	}
+		logMessage(log_fd,"SOLUTION FOUND for job %s: %s\n",
+				   currJob.jobid,
+				   passphrase);
+		char solutionPath[MAX_PKT_LEN];
+		memset(solutionPath,0,MAX_PKT_LEN);
+		
+		snprintf(solutionPath,MAX_PKT_LEN,"%s/SOLUTION",currJob.output_path);
+		FILE *solutionFile = fopen(solutionPath,"w+");
+		if (solutionFile==NULL) {
+			logMessage(log_fd, "Failed to open solution file: %s\n", 
+					   solutionPath);
+		} else {
+			logMessage(log_fd,"Solution file opened: %s\n", solutionPath);
+			fwrite(passphrase, strlen(passphrase)+1, 1, solutionFile);
+			fclose(solutionFile);
+		}
     }
     gettimeofday(&end, 0);
     if (ret!=0) {
-	logMessage(log_fd,"NO SOLUTION\n");
+		logMessage(log_fd,"NO SOLUTION\n");
     }
     
     //logMessage(log_fd, "exiting\n");
@@ -1526,9 +1528,7 @@ int loadRainbowTable(char *path) {
     long long len;               // number of bytes to read from each file
     struct dirent *dirent;		// directory entry
     char temp_path[MAX_STR_LEN]; // temp var for building path
-    //unsigned char* buffer;	 
     struct ssid_table *ssid_entry;
-    //unsigned char* ssid_name;
 
     // open directory to search
     dir = opendir(path);
@@ -1539,12 +1539,8 @@ int loadRainbowTable(char *path) {
     while ((dirent = readdir(dir))!=NULL) {
 		if (strcmp(".",dirent->d_name)==0) continue;
 		if (strcmp("..",dirent->d_name)==0) continue;
-		// ignore entries that aren't regular files
-		//if (dirent->d_type != DT_REG) continue;
-		//logMessage(log_fd, "testing dirent %s\n", dirent->d_name);
 		count++;
     }
-    //logMessage(log_fd, "Found %d dirents in %s\n", count, path);
 
     // rewind dirent pointer to beginning
     rewinddir(dir);
@@ -1553,19 +1549,14 @@ int loadRainbowTable(char *path) {
     rainbow_table = (struct ssid_table**)malloc(count*sizeof(struct ssid_table*));
     if (rainbow_table==NULL) return -1;
 	
-	logMessage(log_fd, "start_offset (inclusive) = %llu and end_offset (exclusive) = %llu\n", start_offset, end_offset);
-
     // open entries in directory
     while ((dirent = readdir(dir))!=NULL) {
 		if (strcmp(".",dirent->d_name)==0) continue;
 		if (strcmp("..",dirent->d_name)==0) continue;
-		// ignore entries that aren't regular files
-		//if (dirent->d_type != DT_REG) continue;
 
 		// create path to file
 		memset(temp_path,0,MAX_STR_LEN);
 		snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
-		logMessage(log_fd, "Entry %d of %d:  Trying path %s\n", index+1, count, temp_path);
     
 		// allocate memory to ssid entry and ssid name
 		ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
