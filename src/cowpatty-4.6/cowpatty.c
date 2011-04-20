@@ -81,8 +81,8 @@ char password_buf[65];
 unsigned long wordstested = 0;
 
 struct ssid_table {
-        char *ssid;
-        unsigned char *buffer;
+    char *ssid;
+    unsigned char *buffer;
 };
 int status = NOTLOADED;
 char rainbow_table_path[MAX_STR_LEN];
@@ -754,6 +754,7 @@ int nexthashrec(FILE * fp, struct hashdb_rec *rec) {
 int nexthashrec_dist(unsigned char* rt,int i,struct hashdb_rec *rec) {
     
     int recordlength, wordlen;
+    // TODO: make this long or long long (64 bit)
     int len = i;
 
     //TODO: check errors
@@ -1112,7 +1113,7 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
 	wordstested++;
 	
 	// Status display
-	if ((wordstested % 10000) == 0)
+	if ((wordstested % 100) == 0)
 	    logMessage(log_fd, "key no. %ld: %s\n", wordstested, passphrase);
 	
 	if (opt->verbose > 1)
