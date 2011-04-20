@@ -738,9 +738,10 @@ int nexthashrec_dist(unsigned char* rt, long long index,
     int recordlength, wordlen;
     long long length = index;
 
-    //TODO: check errors
-    //TODO: change fprintfs to logMessages
-    memcpy(&rec->rec_size, rt+length, sizeof(rec->rec_size));
+    if (memcpy(&rec->rec_size, rt+length, sizeof(rec->rec_size)) == NULL) {
+	logMessage(log_fd, "memcpy failed on &rec->rec_size\n");
+	return -1;
+    }
     length += sizeof(rec->rec_size);
     
     recordlength = abs(rec->rec_size);
@@ -751,13 +752,19 @@ int nexthashrec_dist(unsigned char* rt, long long index,
 	return -1;
     }
     
-    /* hackity, hack, hack, hack */
+    // hackity, hack, hack, hack
     rec->word = password_buf;
     
-    memcpy(rec->word, rt+length, wordlen);
+    if (memcpy(rec->word, rt+length, wordlen)==NULL) {
+	logMessage(log_fd, "memcpy failed on rec->word\n");
+	return -1;
+    }
     length += wordlen;
     
-    memcpy(rec->pmk, rt+length, sizeof(rec->pmk));
+    if (memcpy(rec->pmk, rt+length, sizeof(rec->pmk))==NULL) {
+	logMessage(log_fd, "memcpy failed on rec->pmk\n");
+	return -1;
+    }
     
     return recordlength;
 }
@@ -1067,7 +1074,10 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
 	}
 	
 	// Populate passphrase with the record contents
-	memcpy(passphrase, rec.word, wordlen);
+	if (memcpy(passphrase, rec.word, wordlen)==NULL) {
+	    logMessage(log_fd, "memcpy failed on passphrase\n");
+	    return -1;
+	}
 	
 	// NULL terminate passphrase string
 	passphrase[wordlen] = 0;
@@ -1192,10 +1202,9 @@ void* getCracking(void* arg) {
     
     // Populate capdata struct
     //TODO: check on these sizes
-    //logMessage(log_fd, "strncpy\n");
     strncpy(capdata.pcapfilename, currJob.capture_path,
             sizeof(capdata.pcapfilename));
-    //logMessage(log_fd, "opening pcap\n");
+    logMessage(log_fd,"opening pcap\n");
     if (openpcap(&capdata) != 0) {
 	logMessage(log_fd,"Unsupported or unrecognized pcap file.\n");
 	status = FINISHED;
@@ -1206,28 +1215,28 @@ void* getCracking(void* arg) {
     // for testing purposes
     opt.verbose = 2;
     
-    /* populates global *packet */
-    //logMessage(log_fd, "calling get packet\n");
+    // populates global *packet
+    logMessage(log_fd, "populating packet\n");
     while (getpacket(&capdata) > 0) {
 	if (opt.verbose > 2) {
 	    lamont_hdump(packet, h->len);
 	}
-	/* test packet for data that we are looking for */
+	// test packet for data that we are looking for
 	if (memcmp(&packet[capdata.l2type_offset], DOT1X_LLCTYPE, 2) ==
 	    0 && (h->len >
 		  capdata.l2type_offset + sizeof(struct wpa_eapol_key))) {
-	    /* It's a dot1x frame, process it */
+	    // It's a dot1x frame, process it
 	    handle_dot1x(&cdata, &capdata, &opt);
 	    if (cdata.aaset && cdata.spaset && cdata.snonceset &&
 		cdata.anonceset && cdata.keymicset
 		&& cdata.eapolframeset) {
-		/* We've collected everything we need. */
+		// We've collected everything we need.
 		break;
 	    }
 	}
     }
     
-    //logMessage(log_fd, "closing pcap\n");
+    logMessage(log_fd, "closing pcap\n");
     closepcap(&capdata);
     
     if (!(cdata.aaset && cdata.spaset && cdata.snonceset &&
@@ -1255,7 +1264,7 @@ void* getCracking(void* arg) {
     }
     */
     
-    /* Zero mic and length data for hmac-md5 calculation */
+    // Zero mic and length data for hmac-md5 calculation
     eapkeypacket =
 	(struct wpa_eapol_key *)&cdata.eapolframe[EAPDOT1XOFFSET];
     memset(&eapkeypacket->key_mic, 0, sizeof(eapkeypacket->key_mic));
@@ -1263,12 +1272,9 @@ void* getCracking(void* arg) {
 	eapkeypacket->key_data_length = 0;
     }
     
-    //printf("Starting dictionary attack.  Please be patient.\n");
-    //fflush(stdout);
-
     gettimeofday(&start, 0);
     
-    //logMessage(log_fd, "finding ssid\n");
+    logMessage(log_fd, "finding ssid\n");
     int i;
     struct ssid_table *ssid_entry;
     for (i=0; i<num_ssid; i++) {
@@ -1276,13 +1282,12 @@ void* getCracking(void* arg) {
             if(!strcmp(ssid_entry->ssid,currJob.ssid))
                 break;
     }
-    //logMessage(log_fd, "i>num_ssid\n");
     if(i>=num_ssid) {
 	status = FINISHED;
 	pthread_exit(NULL);
     }
     
-    //logMessage(log_fd, "before hash file attack\n");
+    logMessage(log_fd, "starting hash file attack\n");
     ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
     if (ret==0) {
 	logMessage(log_fd,"SOLUTION FOUND for job %s: %s\n",
@@ -1351,107 +1356,108 @@ int processConnection(int master_socket_fd) {
     
     // parse packet
     for (i=0; i<len; i++) {
-		if (buffer[i] == (char) 4) {
-			logMessage(log_fd,"RECEIVED: %s %s %s %s %s\n",
-				   message, jobid, capture_path, output_path, ssid);
-			break;
-		} else if (buffer[i] == (char) 31) {
-			sub_i = 0;
-			sub_count++;
-		} else {
-			switch (sub_count) {
-			case 0: message[sub_i]      = buffer[i]; break;
-			case 1: jobid[sub_i]        = buffer[i]; break;
-			case 2: capture_path[sub_i] = buffer[i]; break;
-			case 3: output_path[sub_i]  = buffer[i]; break;
-			case 4: ssid[sub_i]         = buffer[i]; break;
-			default: break;
-			}
-			sub_i++;
-		}
+	if (buffer[i] == (char) 4) {
+	    logMessage(log_fd,"RECEIVED: %s %s %s %s %s\n",
+		       message, jobid, capture_path, output_path, ssid);
+	    break;
+	} else if (buffer[i] == (char) 31) {
+	    sub_i = 0;
+	    sub_count++;
+	} else {
+	    switch (sub_count) {
+	    case 0: message[sub_i]      = buffer[i]; break;
+	    case 1: jobid[sub_i]        = buffer[i]; break;
+	    case 2: capture_path[sub_i] = buffer[i]; break;
+	    case 3: output_path[sub_i]  = buffer[i]; break;
+	    case 4: ssid[sub_i]         = buffer[i]; break;
+	    default: break;
+	    }
+	    sub_i++;
+	}
     }
-	
-	int sawEoT = 0;  // false
-	for(i = 0; i < len; i++) {
-		if(buffer[i] == (char) 4) {
-			sawEoT = !0;  // true
-		}
+    
+    int sawEoT = 0;  // false
+    for(i = 0; i < len; i++) {
+	if(buffer[i] == (char) 4) {
+	    sawEoT = !0;  // true
 	}
-	if(0 == sawEoT) {
-		logMessage(log_fd, "Didn't see EoT in packet from remote master!  len was %d\n", len);
-		sendPacket(master_socket_fd,"ERROR",
-				   "You didn't send a EoT",NULL);
-		return 0;
-	}
+    }
+    if(0 == sawEoT) {
+	logMessage(log_fd, "Didn't see EoT in packet from remote master!  len was %d\n", len);
+	sendPacket(master_socket_fd,"ERROR",
+		   "You didn't send a EoT",NULL);
+	return 0;
+    }
     
     if (strcmp(message,"START")==0) {
-		// check if a job is running
-		if (status==RUNNING) {
-			sendPacket(master_socket_fd,"ERROR",
-				   "Another job is still running",NULL);
-			return 0;
-		}
-		// clear memory
-		memset(&currJob,              0,             sizeof(struct job));
-		memcpy(&currJob.jobid,        &jobid,        MAX_STR_LEN);
-		memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
-		memcpy(&currJob.output_path,  &output_path,  MAX_STR_LEN);
-		memcpy(&currJob.ssid,         &ssid,         MAX_STR_LEN);
-		
-		// start worker thread
-		int ret = pthread_create(&currJob.thread,NULL,getCracking,NULL);
-		if (ret<0) {
-			sendPacket(master_socket_fd,"ERROR",
-				   "Unable to create thread to perform work",NULL);
-			return 0;
-		}
-		logMessage(log_fd,"Job started\n");
-		// job started successfully
-		status = RUNNING;
-		sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
+	// check if a job is running
+	if (status==RUNNING) {
+	    sendPacket(master_socket_fd,"ERROR",
+		       "Another job is still running",NULL);
+	    return 0;
+	}
+	// clear memory
+	memset(&currJob,              0,             sizeof(struct job));
+	memcpy(&currJob.jobid,        &jobid,        MAX_STR_LEN);
+	memcpy(&currJob.capture_path, &capture_path, MAX_STR_LEN);
+	memcpy(&currJob.output_path,  &output_path,  MAX_STR_LEN);
+	memcpy(&currJob.ssid,         &ssid,         MAX_STR_LEN);
+	
+	// start worker thread
+	int ret = pthread_create(&currJob.thread,NULL,getCracking,NULL);
+	if (ret<0) {
+	    sendPacket(master_socket_fd,"ERROR",
+		       "Unable to create thread to perform work",NULL);
+	    return 0;
+	}
+	logMessage(log_fd,"Job started\n");
+	logMessage(log_fd,"sizeof(long long): %ll\n", sizeof(long long));
+	// job started successfully
+	status = RUNNING;
+	sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
     } else if (strcmp(message,"STATUS")==0) {
-		int ret;
-		switch(status) {
-			case LOADED:
-				ret = sendPacket(master_socket_fd,"STATUS","LOADED",NULL);
-				if (ret<0) 
-				logMessage(log_fd, "Error occurred while sending packet\n");
-				break;
-			case RUNNING:
-				ret = sendPacket(master_socket_fd,"STATUS","RUNNING",jobid);
-				if (ret<0) 
-				logMessage(log_fd, "Error occurred while sending packet\n");
-				break;
-			case FINISHED:
-				ret = sendPacket(master_socket_fd,"STATUS","FINISHED",jobid);
-				if (ret<0) 
-				logMessage(log_fd, "Error occurred while sending packet\n");
-				break;
-			case KILLED:
-				ret = sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
-				if (ret<0) 
-				logMessage(log_fd, "Error occurred while sending packet\n");
-				break;
-			default: 
-				ret = sendPacket(master_socket_fd,"ERROR","Unknown status", NULL);
-				if (ret<0) 
-				logMessage(log_fd, "Error occurred while sending packet\n");
-				break;
-		}
+	int ret;
+	switch(status) {
+	case LOADED:
+	    ret = sendPacket(master_socket_fd,"STATUS","LOADED",NULL);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
+	    break;
+	case RUNNING:
+	    ret = sendPacket(master_socket_fd,"STATUS","RUNNING",jobid);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
+	    break;
+	case FINISHED:
+	    ret = sendPacket(master_socket_fd,"STATUS","FINISHED",jobid);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
+	    break;
+	case KILLED:
+	    ret = sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
+	    break;
+	default: 
+	    ret = sendPacket(master_socket_fd,"ERROR","Unknown status", NULL);
+	    if (ret<0) 
+		logMessage(log_fd, "Error occurred while sending packet\n");
+	    break;
+	}
     } else if (strcmp(message,"KILLJOB")==0) {
-		int ret = pthread_cancel(currJob.thread);
-		if (ret == 0) {
-			status = KILLED;
-			sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
-		} else if (errno == ESRCH) {
-			//TODO: this may mean that the job finished already
-			sendPacket(master_socket_fd,"ERROR","No such job exists",NULL);
-		} else {
-			sendPacket(master_socket_fd,"ERROR",
-				   "Kill command failed for unknown reason",NULL);
-		}
+	int ret = pthread_cancel(currJob.thread);
+	if (ret == 0) {
+	    status = KILLED;
+	    sendPacket(master_socket_fd,"STATUS","KILLED",jobid);
+	} else if (errno == ESRCH) {
+	    //TODO: this may mean that the job finished already
+	    sendPacket(master_socket_fd,"ERROR","No such job exists",NULL);
+	} else {
+	    sendPacket(master_socket_fd,"ERROR",
+		       "Kill command failed for unknown reason",NULL);
+	}
     }
-
+    
     return 0;
 }
 
