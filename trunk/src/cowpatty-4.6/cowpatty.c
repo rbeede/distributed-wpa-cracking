@@ -1576,7 +1576,7 @@ logMessage(log_fd, "->ssid is %s\n", ssid_entry->ssid);
 		// open file
 		fd = open(temp_path,O_RDONLY);
 		if (fd<0) return -1;
-
+logMessage(log_fd, "about to offset myself to start_offset %llu and also end_offset is %llu\n", start_offset, end_offset);
 		// seek to proper position
 		ret = lseek(fd, start_offset, SEEK_SET);
 		if (ret<0) return -1;
