@@ -8,10 +8,10 @@
 # <dragorn> make is a twisted beast
 ##################################
 LDLIBS		= -lpcap
-CFLAGS		= -pipe -Wall -DOPENSSL 
-#CFLAGS		+= -O2
+CFLAGS		= -pipe -Wall -DOPENSSL
+CFLAGS		+= -O2 -m64
 LDLIBS		+= -lcrypto -lpthread
-CFLAGS		+= -g3 -ggdb
+#CFLAGS		+= -g3 -ggdb
 #CFLAGS		+= -static
 PROGOBJ		= md5.o sha1.o utils.o cowpatty.o genpmk.o
 PROG		= cowpatty genpmk
