@@ -84,7 +84,7 @@ public class HashDatabaseRecord {
 			throw new IllegalArgumentException("bytes length of " + bytes.length + " > " + MAXIMUM_BYTE_LENGTH);
 		}
 		
-		this.recordSize = SignedUnsignedNumberConvertor.unsignedByteToInt(bytes[0]);
+		this.recordSize = SignedUnsignedNumberConvertor.unsignedByteToInt(bytes[0]);  // first byte is record size in bytes (including first byte)
 		
 		if(bytes.length != this.recordSize) {
 			throw new InvalidRecordException("record size parsed was " + this.recordSize + " but bytes.length was " + bytes.length);

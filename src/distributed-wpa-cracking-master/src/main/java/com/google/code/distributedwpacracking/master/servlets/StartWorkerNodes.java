@@ -120,7 +120,8 @@ public class StartWorkerNodes extends HttpServlet {
 			log.debug(i + ":\t" + startRange + " to " + endRange);
 			
 			startCmd = startCmd.replace("${NODE_START_OFFSET}", Long.toString(rainbowTable.getRecords().get(startRange).getByteOffset()));
-			startCmd = startCmd.replace("${NODE_END_OFFSET}", Long.toString(rainbowTable.getRecords().get(endRange).getByteOffset()));
+			// End offset is exclusive byte offset where last record ends and the next one would begin
+			startCmd = startCmd.replace("${NODE_END_OFFSET}", Long.toString(rainbowTable.getRecords().get(endRange).getByteOffset() + rainbowTable.getRecords().get(endRange).getRecordSize() ));
 			startCmd = startCmd.replace("${NODE_RECORD_START}", Integer.toString(startRange));
 			startCmd = startCmd.replace("${NODE_RECORD_END}", Integer.toString(endRange));
 
