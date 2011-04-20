@@ -1332,7 +1332,7 @@ void* getCracking(void* arg) {
 		       solutionPath);
 	} else {
 	    logMessage(log_fd,"Solution file opened: %s\n", solutionPath);
-	    fwrite(passphrase, 1, sizeof(passphrase), solutionFile);
+	    fwrite(passphrase, strlen(passphrase), 1, solutionFile);
 	    fclose(solutionFile);
 	}
     }
