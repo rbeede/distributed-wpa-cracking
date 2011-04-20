@@ -82,6 +82,7 @@ public class StartWorkerNodes extends HttpServlet {
 			resp.sendRedirect(resp.encodeRedirectURL(getServletContext().getContextPath() + "/welcome.jspx"));
 			return;
 		}
+		log.debug("Done parsing single SSID file " + previousFile.getAbsolutePath() + " into memory");
 		
 		// Now we can use this information for calculating offsets later :) 
 		// Figure out the rainbow table record ranges for this node
@@ -89,7 +90,13 @@ public class StartWorkerNodes extends HttpServlet {
 		
 		log.debug("Number of rainbow table records is " + rainbowTable.getRecords().size() + " which gives block sizes of "
 				+ blockSize + " for " + addresses.length + " worker nodes");
+		
+		// More helpful debug
+		log.debug("The very first password in the table is " + rainbowTable.getRecords().get(0).getPassword());
+		log.debug("The very last passwrd in the table is " + rainbowTable.getRecords().get(rainbowTable.getRecords().size()-1).getPassword());
+		log.debug("The nearest middle password in the table is " + rainbowTable.getRecords().get(rainbowTable.getRecords().size() / 2).getPassword());
 
+		
 		for(int i = 0; i < addresses.length; i++) {
 			final InetSocketAddress address = addresses[i];
 			
