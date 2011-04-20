@@ -1521,7 +1521,6 @@ void* listenForPacket(void* arg1) {
 int loadRainbowTable(char *path) {
     int index=0;
     int fd;                      // file descriptor of files in directory
-    int ret;                     // return value
     int count;                   // number of files to read through
     DIR *dir;                    // directory to search
     long long len;               // number of bytes to read from each file
@@ -1582,7 +1581,9 @@ logMessage(log_fd, "about to offset myself to start_offset %llu and also end_off
 logMessage(log_fd, "offset worked, now calc len and setting up buffer\n");
 		// read in chunk of file as specified from command line arguments
 		len = end_offset - start_offset + 1;  //TODO bug in that last record isn't read?
+logMessage(log_fd, "len is %llu\n", len);
 		ssid_entry->buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
+logMessage(log_fd, "buffer allocated\n");
 		if (ssid_entry->buffer==NULL) return -1;
 logMessage(log_fd, "About to read %llu bytes\n", len);
 logMessage(log_fd, "Did you know that ssize_t has a sizeof() value of %llu\n", sizeof(ssize_t));
@@ -1596,14 +1597,12 @@ logMessage(log_fd, "I read %llu bytes\n", bytesRead);
 		rainbow_table[index] = ssid_entry;
 		
 		// close file
-		ret = close(fd);
-		if (ret<0) return -1;
+		close(fd);
 
 		index++;
 	}  // end of DIR while loop
     // close directory
-    ret = closedir(dir);
-    if (ret<0) return -1;
+    closedir(dir);
 
     return count;
 }
