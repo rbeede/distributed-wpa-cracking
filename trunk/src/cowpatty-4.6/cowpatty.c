@@ -340,13 +340,16 @@ int openpcap(struct capture_data *capdata) {
     // Assume for now it's a libpcap file
     p = pcap_open_offline(capdata->pcapfilename, errbuf);
     if (p == NULL) {
-	logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
+	//logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
+	logMessage(log_fd, "Unable to open capture file\n");
 	return (-1);
     }
     
     // Determine link type
+    logMessage(log_fd, "pcap_datalink\n");
     capdata->pcaptype = pcap_datalink(p);
     
+    logMessage(log_fd, "switch\n");
     // Determine offset to EAP frame based on link type
     switch (capdata->pcaptype) {
     case DLT_NULL:
@@ -360,6 +363,7 @@ int openpcap(struct capture_data *capdata) {
 	return (1);
     }
     
+    logMessage(log_fd, "return\n");
     return (0);
 }
 
