@@ -1163,6 +1163,7 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
 	} else {
 	    continue;
 	}
+	if (strcmp(passphrase,"kousonin") == 0) break;
     }
     
     return 1;
