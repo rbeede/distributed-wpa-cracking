@@ -8,6 +8,10 @@ Use headings with the format YYYY-MM-DD HH:MM - yourname - brief subject
 
 Newest at top
 
+= 2011-04-20 15:08 - Rodney Beede, Ryan Kroiss - Code work =
+
+Working all day on getting the code to work with all 1,000 SSID.
+
 = 2011-04-16 18:34 - Rodney Beede, Arpit Sud, Ryan Kroiss - CODING MAYHEM! =
 
 Master now passes SSID with job start.  Added struct for rainbow table entries.
