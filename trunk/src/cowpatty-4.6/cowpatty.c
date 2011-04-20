@@ -1219,12 +1219,12 @@ void* getCracking(void* arg) {
     int ret;
     char passphrase[MAXPASSLEN + 1];
 
-    // clear structs
-    //logMessage(log_fd, "clearing structs\n");
+    // clear data
     memset(&opt,            0, sizeof(struct user_opt));
     memset(&capdata,        0, sizeof(struct capture_data));
     memset(&cdata,          0, sizeof(struct crack_data));
     memset(&eapolkey_nomic, 0, sizeof(eapolkey_nomic));
+    memset(passphrase,      0, sizeof(passphrase));
     
     // Populate capdata struct
     //TODO: check on these sizes
@@ -1332,7 +1332,7 @@ void* getCracking(void* arg) {
 		       solutionPath);
 	} else {
 	    logMessage(log_fd,"Solution file opened: %s\n", solutionPath);
-	    fwrite(passphrase, strlen(passphrase), 1, solutionFile);
+	    fwrite(passphrase, strlen(passphrase)+1, 1, solutionFile);
 	    fclose(solutionFile);
 	}
     }
