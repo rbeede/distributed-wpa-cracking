@@ -1519,14 +1519,13 @@ void* listenForPacket(void* arg1) {
 }
 
 int loadRainbowTable(char *path) {
-
     int index=0;
     int fd;                      // file descriptor of files in directory
     int ret;                     // return value
     int count;                   // number of files to read through
     DIR *dir;                    // directory to search
     long long len;               // number of bytes to read from each file
-    struct dirent *dirent;	 // directory entry
+    struct dirent *dirent;		// directory entry
     char temp_path[MAX_STR_LEN]; // temp var for building path
     //unsigned char* buffer;	 
     struct ssid_table *ssid_entry;
@@ -1539,12 +1538,12 @@ int loadRainbowTable(char *path) {
     // count the number of files to read
     count=0;
     while ((dirent = readdir(dir))!=NULL) {
-	if (strcmp(".",dirent->d_name)==0) continue;
-	if (strcmp("..",dirent->d_name)==0) continue;
-	// ignore entries that aren't regular files
-	//if (dirent->d_type != DT_REG) continue;
-	//logMessage(log_fd, "testing dirent %s\n", dirent->d_name);
-	count++;
+		if (strcmp(".",dirent->d_name)==0) continue;
+		if (strcmp("..",dirent->d_name)==0) continue;
+		// ignore entries that aren't regular files
+		//if (dirent->d_type != DT_REG) continue;
+		//logMessage(log_fd, "testing dirent %s\n", dirent->d_name);
+		count++;
     }
     //logMessage(log_fd, "Found %d dirents in %s\n", count, path);
 
@@ -1557,49 +1556,52 @@ int loadRainbowTable(char *path) {
 
     // open entries in directory
     while ((dirent = readdir(dir))!=NULL) {
-	if (strcmp(".",dirent->d_name)==0) continue;
-	if (strcmp("..",dirent->d_name)==0) continue;
-	// ignore entries that aren't regular files
-	//if (dirent->d_type != DT_REG) continue;
+		if (strcmp(".",dirent->d_name)==0) continue;
+		if (strcmp("..",dirent->d_name)==0) continue;
+		// ignore entries that aren't regular files
+		//if (dirent->d_type != DT_REG) continue;
 
-	// create path to file
-	memset(temp_path,0,MAX_STR_LEN);
-	snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
-	logMessage(log_fd, "Trying path %s\n", temp_path);
+		// create path to file
+		memset(temp_path,0,MAX_STR_LEN);
+		snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
+		logMessage(log_fd, "Trying path %s\n", temp_path);
     
-	// allocate memory to ssid entry and ssid name
-	ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
-	ssid_entry->ssid = (char*)malloc((strnlen(dirent->d_name, NAME_MAX)+1)*sizeof(char));
-	
-	//copy hash file name to ssid name
-	strncpy(ssid_entry->ssid, dirent->d_name, NAME_MAX);
-    
-	// open file
-	fd = open(temp_path,O_RDONLY);
-	if (fd<0) return -1;
+		// allocate memory to ssid entry and ssid name
+		ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
+		ssid_entry->ssid = (char*)malloc((strnlen(dirent->d_name, NAME_MAX)+1)*sizeof(char));
+logMessage(log_fd, "Allocated memory for ssid_entry and ->ssid\n");
+		//copy hash file name to ssid name
+		strncpy(ssid_entry->ssid, dirent->d_name, NAME_MAX);
+logMessage(log_fd, "->ssid is %s\n", ssid_entry->ssid);
+		// open file
+		fd = open(temp_path,O_RDONLY);
+		if (fd<0) return -1;
 
-	// seek to proper position
-	ret = lseek(fd, start_offset, SEEK_SET);
-	if (ret<0) return -1;
+		// seek to proper position
+		ret = lseek(fd, start_offset, SEEK_SET);
+		if (ret<0) return -1;
 
-	// read in chunk of file as specified from command line arguments
-	len = end_offset-start_offset+1;  //TODO bug in that last record isn't read?
-	ssid_entry->buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
-	if (ssid_entry->buffer==NULL) return -1;
-	ret = read(fd, ssid_entry->buffer, len);
+		// read in chunk of file as specified from command line arguments
+		len = end_offset - start_offset + 1;  //TODO bug in that last record isn't read?
+		ssid_entry->buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
+		if (ssid_entry->buffer==NULL) return -1;
+logMessage(log_fd, "About to read %llu bytes\n", len);
+logMessage(log_fd, "Did you know that ssize_t has a sizeof() value of %llu\n", sizeof(ssize_t));
+		ssize_t bytesRead = 0;
+		bytesRead = read(fd, ssid_entry->buffer, len);
+logMessage(log_fd, "I read %llu bytes\n", bytesRead);
+		if (bytesRead != len) {
+			logMessage(log_fd, "ERROR, tried to read %llu bytes but only read %llu\n", len, ret);
+			return -1;
+		}
+		rainbow_table[index] = ssid_entry;
+		
+		// close file
+		ret = close(fd);
+		if (ret<0) return -1;
 
-	if (ret != len) {
-		logMessage(log_fd, "ERROR, tried to read %llu bytes but only read %llu\n", len, ret);
-		return -1;
-	}
-	rainbow_table[index] = ssid_entry;
-	
-	// close file
-	ret = close(fd);
-	if (ret<0) return -1;
-
-	index++;
-    }
+		index++;
+	}  // end of DIR while loop
     // close directory
     ret = closedir(dir);
     if (ret<0) return -1;
