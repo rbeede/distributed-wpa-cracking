@@ -338,6 +338,9 @@ void testopts(struct user_opt *opt)
 int openpcap(struct capture_data *capdata) {
     
     // Assume for now it's a libpcap file
+    if (capdata->pcapfilename == NULL) 
+	logMessage(log_fd, "pcapfilename is null\n");
+    logMessage(log_fd, "pcap_open_offline: %d\n", capdata->pcapfilename);
     p = pcap_open_offline(capdata->pcapfilename, errbuf);
     if (p == NULL) {
 	//logMessage(log_fd, "Unable to open capture file: %s\n",errbuf);
