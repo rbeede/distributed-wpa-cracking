@@ -1087,7 +1087,7 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
     while (i<(end_offset-start_offset+1)) {
 	
 	// Populate the hashdb_rec with the next record
-	logMessage(log_fd, "nexthashrec %d\n",i);
+	//logMessage(log_fd, "nexthashrec %d\n",i);
 	reclen = nexthashrec_dist(raint, i, &rec);
 	fwrite(&rec, sizeof(rec), 1, testLog);
 	i += reclen;
