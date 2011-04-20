@@ -1411,7 +1411,7 @@ int processConnection(int master_socket_fd) {
 	    return 0;
 	}
 	logMessage(log_fd,"Job started\n");
-	logMessage(log_fd,"sizeof(long long): %ll\n", sizeof(long long));
+	logMessage(log_fd,"sizeof(long long): %llu\n", sizeof(long long));
 	// job started successfully
 	status = RUNNING;
 	sendPacket(master_socket_fd,"STATUS","SUCCESS_START",jobid);
