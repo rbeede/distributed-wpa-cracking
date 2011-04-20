@@ -1163,7 +1163,6 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
 	} else {
 	    continue;
 	}
-	if (strcmp(passphrase,"kousonin") == 0) break;
     }
     
     return 1;
@@ -1323,6 +1322,11 @@ void* getCracking(void* arg) {
     ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
     if (ret==0) {
 	logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
+	char solutionPath[MAX_PKT_LEN];
+	memset(solutionPath,0,MAX_PKT_LEN);
+	snprintf(solutionPath,MAX_PKT_LEN,"%s/SOLUTION",currJob.output_path);
+	FILE *solutionFile = fopen(solutionPath,"w+");
+	fwrite(passphrase, sizeof(passphrase),1,solutionFile);
     }
     gettimeofday(&end, 0);
     if (ret!=0) {
