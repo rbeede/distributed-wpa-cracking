@@ -1066,7 +1066,7 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
     
     /*logMessage(log_fd, "before while in hashfileattack (-v %d)\n",
 	  opt->verbose);*/
-    while (index<(end_offset-start_offset+1)) {
+    while (index<(end_offset-start_offset)) {
 		
 		// Populate the hashdb_rec with the next record
 		reclen = nexthashrec_dist(raint, index, &rec);
