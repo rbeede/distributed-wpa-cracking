@@ -1578,9 +1578,8 @@ logMessage(log_fd, "->ssid is %s\n", ssid_entry->ssid);
 		if (fd<0) return -1;
 logMessage(log_fd, "about to offset myself to start_offset %llu and also end_offset is %llu\n", start_offset, end_offset);
 		// seek to proper position
-		ret = lseek(fd, start_offset, SEEK_SET);
-		if (ret<0) return -1;
-
+		if (lseek(fd, start_offset, SEEK_SET) < 0) return -1;
+logMessage(log_fd, "offset worked, now calc len and setting up buffer\n");
 		// read in chunk of file as specified from command line arguments
 		len = end_offset - start_offset + 1;  //TODO bug in that last record isn't read?
 		ssid_entry->buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
