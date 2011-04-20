@@ -163,7 +163,7 @@ int logMessage(int fd, const char* format, ...) {
     // write buffer and flush
     ret = write(fd, total, strlen(total));
     if (ret<0) return -1;
-    ret = fsync(fd);
+    // this is too slow		ret = fsync(fd);
     if (ret<0) return -1;
 
     return 0;
@@ -1549,6 +1549,11 @@ int loadRainbowTable(char *path) {
     rainbow_table = (struct ssid_table**)malloc(count*sizeof(struct ssid_table*));
     if (rainbow_table==NULL) return -1;
 	
+	
+	// Important for verifying
+	logMessage(log_fd, "start_offset (inclusive) = %llu and end_offset (exclusive) = %llu\n", start_offset, end_offset);
+	
+	
     // open entries in directory
     while ((dirent = readdir(dir))!=NULL) {
 		if (strcmp(".",dirent->d_name)==0) continue;
@@ -1557,6 +1562,10 @@ int loadRainbowTable(char *path) {
 		// create path to file
 		memset(temp_path,0,MAX_STR_LEN);
 		snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
+		
+		// Important progress indicator to tell if cowpatty is loading
+		logMessage(log_fd, "Entry %d of %d:  Trying path %s\n", index+1, count, temp_path);
+    
     
 		// allocate memory to ssid entry and ssid name
 		ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
