@@ -1582,7 +1582,7 @@ int loadRainbowTable(char *path) {
 		if (lseek(fd, start_offset, SEEK_SET) < 0) return -1;
 
 		// read in chunk of file as specified from command line arguments
-		len = end_offset - start_offset + 1;  //TODO bug in that last record isn't read?
+		len = end_offset - start_offset;
 
 		long long bufferSizeInBytes = len*sizeof(unsigned char);
 
