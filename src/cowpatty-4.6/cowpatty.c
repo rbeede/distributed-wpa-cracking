@@ -79,7 +79,6 @@ char *words;
    malloc/free for each entry. */
 char password_buf[65];
 unsigned long wordstested = 0;
-FILE *testLog;
 
 struct ssid_table {
     char *ssid;
@@ -752,21 +751,16 @@ int nexthashrec(FILE * fp, struct hashdb_rec *rec) {
     return recordlength;
 }
 
-int nexthashrec_dist(unsigned char* rt,int i,struct hashdb_rec *rec) {
+int nexthashrec_dist(unsigned char* rt, long long index,
+		     struct hashdb_rec *rec) {
     
     int recordlength, wordlen;
-    // TODO: make this long or long long (64 bit)
-    int len = i;
+    long long length = index;
 
     //TODO: check errors
     //TODO: change fprintfs to logMessages
-    memcpy(&rec->rec_size, rt+len, sizeof(rec->rec_size));
-    len += sizeof(rec->rec_size);
-    //read(fd, &rec->rec_size, sizeof(rec->rec_size));
-    /*if (fread(&rec->rec_size, sizeof(rec->rec_size), 1, fp) != 1) {	
-	perror("fread");
-	return -1;
-	}*/
+    memcpy(&rec->rec_size, rt+length, sizeof(rec->rec_size));
+    length += sizeof(rec->rec_size);
     
     recordlength = abs(rec->rec_size);
     wordlen = recordlength - (sizeof(rec->pmk) + sizeof(rec->rec_size));
@@ -779,20 +773,10 @@ int nexthashrec_dist(unsigned char* rt,int i,struct hashdb_rec *rec) {
     /* hackity, hack, hack, hack */
     rec->word = password_buf;
     
-    memcpy(rec->word, rt+len, wordlen);
-    len += wordlen;
-    //read(fd, rec->word, wordlen);
-    /*if (fread(rec->word, wordlen, 1, fp) != 1) {
-	perror("fread");
-	return -1;
-	}*/
+    memcpy(rec->word, rt+length, wordlen);
+    length += wordlen;
     
-    memcpy(rec->pmk, rt+len, sizeof(rec->pmk));
-    //read(fd, rec->pmk, sizeof(rec->pmk));
-    /*if (fread(rec->pmk, sizeof(rec->pmk), 1, fp) != 1) {
-	perror("fread");
-	return -1;
-	}*/
+    memcpy(rec->pmk, rt+length, sizeof(rec->pmk));
     
     return recordlength;
 }
@@ -1075,7 +1059,8 @@ int dictfile_attack(struct user_opt *opt, char *passphrase,
 int hashfile_attack_dist(struct user_opt *opt, char *passphrase, 
 			 struct crack_data *cdata,unsigned char* raint) {
 	
-    int reclen, wordlen, i=0;
+    int reclen, wordlen;
+    long long index = 0;
     u8 pmk[32];
     u8 ptk[64];
     u8 keymic[16];
@@ -1084,13 +1069,11 @@ int hashfile_attack_dist(struct user_opt *opt, char *passphrase,
     
     logMessage(log_fd, "before  while in hashfileattack (-v %d)\n",
 	       opt->verbose);
-    while (i<(end_offset-start_offset+1)) {
+    while (index<(end_offset-start_offset+1)) {
 	
 	// Populate the hashdb_rec with the next record
-	//logMessage(log_fd, "nexthashrec %d\n",i);
-	reclen = nexthashrec_dist(raint, i, &rec);
-	fwrite(&rec, sizeof(rec), 1, testLog);
-	i += reclen;
+	reclen = nexthashrec_dist(raint, index, &rec);
+	index += reclen;
 	
 	// nexthashrec returns the length of the record, test to ensure
 	//   passphrase is greater than 8 characters
@@ -1696,8 +1679,6 @@ int parseOptsDist(int argc, char **argv) {
 
 int main(int argc, char **argv) {
 
-    testLog = fopen("/home/DIST-WPA/group-shared/test.log","w+");
-    
     printf("%s %s - WPA-PSK dictionary attack. <jwright@hasborg.com>\n",
 	   PROGNAME, VER);
 
