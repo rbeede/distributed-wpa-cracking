@@ -1223,7 +1223,7 @@ void* getCracking(void* arg) {
 
     //TODO: opt.verbose,opt.checkonly, opt.nonstrict will default to 0
     // for testing purposes
-    //opt.verbose = 2;
+    opt.verbose = 2;
     
     /* populates global *packet */
     //logMessage(log_fd, "calling get packet\n");
@@ -1304,7 +1304,9 @@ void* getCracking(void* arg) {
     //logMessage(log_fd, "before hash file attack\n");
     ret = hashfile_attack_dist(&opt,passphrase,&cdata,ssid_entry->buffer);
     if (ret==0) {
-	logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
+	logMessage(log_fd,"SOLUTION FOUND for job %s: %s\n",
+		   currJob.jobid,
+		   passphrase);
 	char solutionPath[MAX_PKT_LEN];
 	memset(solutionPath,0,MAX_PKT_LEN);
 	
