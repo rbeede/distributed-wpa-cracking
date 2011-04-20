@@ -57,7 +57,7 @@ So the worker node gets the following as startup command line parameters:
 
 	--cluster-rainbow-table-start-offset 12345   (byte offset start of first record (inclusive) for every rainbow table SSID file, master node will enforce that all SSID files have the same byte size)
 
-	--cluster-rainbow-table-end-offset 54321   (byte offset end record (inclusive) for every rainbow table SSID file, this is the starting byte of the last record this node should attempt)
+	--cluster-rainbow-table-end-offset 54321   (byte offset end record (exclusive) for every rainbow table SSID file, this is the next byte after the last record this node should attempt, for the last node it may actually be past the last byte of the file)
 
 	--cluster-log /home/nfs_share/hostname.log   (file where local node actions are logged that aren't specific to a job)
 
