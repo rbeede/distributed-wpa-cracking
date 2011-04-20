@@ -1582,7 +1582,9 @@ logMessage(log_fd, "offset worked, now calc len and setting up buffer\n");
 		// read in chunk of file as specified from command line arguments
 		len = end_offset - start_offset + 1;  //TODO bug in that last record isn't read?
 logMessage(log_fd, "len is %llu\n", len);
-		ssid_entry->buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
+long long bufferSizeInBytes = len*sizeof(unsigned char);
+logMessage(log_fd, "len * sizeof() ==> %llu * %d = %llu\n", len, sizeof(unsigned char), bufferSizeInBytes);
+		ssid_entry->buffer = (unsigned char*)malloc(bufferSizeInBytes);
 logMessage(log_fd, "buffer allocated\n");
 		if (ssid_entry->buffer==NULL) return -1;
 logMessage(log_fd, "About to read %llu bytes\n", len);
