@@ -90,8 +90,8 @@ int port_num;
 int log_fd;
 int node_count;
 int node_rank;
-int start_offset;
-int end_offset;
+long long start_offset;
+long long end_offset;
 int num_ssid;
 struct ssid_table **rainbow_table;
 
@@ -1518,7 +1518,7 @@ int loadRainbowTable(char *path) {
     int ret;                     // return value
     int count;                   // number of files to read through
     DIR *dir;                    // directory to search
-    size_t len;		         // number of bytes to read from each file
+    long long len;               // number of bytes to read from each file
     struct dirent *dirent;	 // directory entry
     char temp_path[MAX_STR_LEN]; // temp var for building path
     //unsigned char* buffer;	 
@@ -1628,11 +1628,11 @@ int parseOptsDist(int argc, char **argv) {
 	    strncpy(rainbow_table_path, optarg, sizeof(rainbow_table_path));
 	    break;
 	case 's':
-	    start_offset = strtol(optarg,NULL,10);
+	    start_offset = strtoll(optarg, NULL, 10);
 	    if (errno!=0 || start_offset<0) return -1;
 	    break;
 	case 'e':
-	    end_offset = strtol(optarg,NULL,10);
+	    end_offset = strtoll(optarg,NULL,10);
 	    if (errno!=0 || end_offset<0) return -1;
 	    break;
 	case 'l':
