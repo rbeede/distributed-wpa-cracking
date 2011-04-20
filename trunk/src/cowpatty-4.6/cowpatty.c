@@ -1552,6 +1552,8 @@ int loadRainbowTable(char *path) {
     // allocate memory for pointers to file chunks
     rainbow_table = (struct ssid_table**)malloc(count*sizeof(struct ssid_table*));
     if (rainbow_table==NULL) return -1;
+	
+	logMessage(log_fd, "start_offset (inclusive) = %llu and end_offset (exclusive) = %llu\n", start_offset, end_offset);
 
     // open entries in directory
     while ((dirent = readdir(dir))!=NULL) {
@@ -1563,35 +1565,34 @@ int loadRainbowTable(char *path) {
 		// create path to file
 		memset(temp_path,0,MAX_STR_LEN);
 		snprintf(temp_path,MAX_STR_LEN,"%s/%s",path,dirent->d_name);
-		logMessage(log_fd, "Trying path %s\n", temp_path);
+		logMessage(log_fd, "Entry %d of %d:  Trying path %s\n", index+1, count, temp_path);
     
 		// allocate memory to ssid entry and ssid name
 		ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
 		ssid_entry->ssid = (char*)malloc((strnlen(dirent->d_name, NAME_MAX)+1)*sizeof(char));
-logMessage(log_fd, "Allocated memory for ssid_entry and ->ssid\n");
+
 		//copy hash file name to ssid name
 		strncpy(ssid_entry->ssid, dirent->d_name, strnlen(dirent->d_name, NAME_MAX)+1);
-logMessage(log_fd, "->ssid is %s\n", ssid_entry->ssid);
+
 		// open file
 		fd = open(temp_path,O_RDONLY);
 		if (fd<0) return -1;
-logMessage(log_fd, "about to offset myself to start_offset %llu and also end_offset is %llu\n", start_offset, end_offset);
+
 		// seek to proper position
 		if (lseek(fd, start_offset, SEEK_SET) < 0) return -1;
-logMessage(log_fd, "offset worked, now calc len and setting up buffer\n");
+
 		// read in chunk of file as specified from command line arguments
 		len = end_offset - start_offset + 1;  //TODO bug in that last record isn't read?
-logMessage(log_fd, "len is %llu\n", len);
-long long bufferSizeInBytes = len*sizeof(unsigned char);
-logMessage(log_fd, "len * sizeof() ==> %llu * %d = %llu\n", len, sizeof(unsigned char), bufferSizeInBytes);
+
+		long long bufferSizeInBytes = len*sizeof(unsigned char);
+
 		ssid_entry->buffer = (unsigned char*)malloc(bufferSizeInBytes);
-logMessage(log_fd, "buffer allocated\n");
+
 		if (ssid_entry->buffer==NULL) return -1;
-logMessage(log_fd, "About to read %llu bytes\n", len);
-logMessage(log_fd, "Did you know that ssize_t has a sizeof() value of %llu\n", sizeof(ssize_t));
+
 		ssize_t bytesRead = 0;
 		bytesRead = read(fd, ssid_entry->buffer, len);
-logMessage(log_fd, "I read %llu bytes\n", bytesRead);
+
 		if (bytesRead != len) {
 			logMessage(log_fd, "ERROR, tried to read %llu bytes but only read %llu\n", len, bytesRead);
 			return -1;
