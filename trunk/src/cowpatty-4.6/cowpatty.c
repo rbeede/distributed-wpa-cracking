@@ -1240,7 +1240,7 @@ void* getCracking(void* arg) {
 
     //TODO: opt.verbose,opt.checkonly, opt.nonstrict will default to 0
     // for testing purposes
-    opt.verbose = 2;
+    //opt.verbose = 2;
     
     /* populates global *packet */
     //logMessage(log_fd, "calling get packet\n");
@@ -1324,9 +1324,16 @@ void* getCracking(void* arg) {
 	logMessage(log_fd,"SOLUTION FOUND: %s\n",passphrase);
 	char solutionPath[MAX_PKT_LEN];
 	memset(solutionPath,0,MAX_PKT_LEN);
+	
 	snprintf(solutionPath,MAX_PKT_LEN,"%s/SOLUTION",currJob.output_path);
 	FILE *solutionFile = fopen(solutionPath,"w+");
-	fwrite(passphrase, sizeof(passphrase),1,solutionFile);
+	if (solutionFile==NULL) {
+	    logMessage(log_fd, "Failed to open solution file: %s\n", 
+		       solutionPath);
+	} else {
+	    logMessage(log_fd,"Solution file opened: %s\n", solutionPath);
+	    fwrite(passphrase, sizeof(passphrase),1,solutionFile);
+	}
     }
     gettimeofday(&end, 0);
     if (ret!=0) {
