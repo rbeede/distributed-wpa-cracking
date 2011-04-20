@@ -86,7 +86,7 @@ public class StartWorkerNodes extends HttpServlet {
 		
 		// Now we can use this information for calculating offsets later :) 
 		// Figure out the rainbow table record ranges for this node
-		final double blockSize = (double)rainbowTable.getRecords().size() / (double)addresses.length;  // must use (double) to preserve precision
+		final int blockSize = (int) Math.ceil((double)rainbowTable.getRecords().size() / (double)addresses.length);  // must use (double) to preserve precision
 		
 		log.debug("Number of rainbow table records is " + rainbowTable.getRecords().size() + " which gives block sizes of "
 				+ blockSize + " for " + addresses.length + " worker nodes");
@@ -109,21 +109,23 @@ public class StartWorkerNodes extends HttpServlet {
 			startCmd = startCmd.replace("${RAINBOW_TABLE_DIRECTORY}", rainbowTableDirectory.getAbsolutePath());
 			startCmd = startCmd.replace("${NODE_RECORD_NUMBER}", Integer.toString(rainbowTable.getRecords().size()));
 			
-			final int startRange = (int) Math.ceil(blockSize * i);
-			int endRange = (int) Math.floor((double)startRange + blockSize);
-			
-			if(addresses.length == (i+1) && (rainbowTable.getRecords().size() - 1 != endRange)) {
-				// Need to pick up uneven division although it should be very close
-				endRange = rainbowTable.getRecords().size() - 1;
+			final int startRange = blockSize * i;
+			final int endRange;
+			if( (startRange + blockSize - 1) > (rainbowTable.getRecords().size() - 1) ) {
+				// An uneven distribution can cause this to happen so adjust accordingly
+				endRange = (rainbowTable.getRecords().size() - 1);
+			} else {
+				endRange = (startRange + blockSize - 1);
 			}
+			
 			
 			log.debug(i + ":\t" + startRange + " to " + endRange);
 			
 			startCmd = startCmd.replace("${NODE_START_OFFSET}", Long.toString(rainbowTable.getRecords().get(startRange).getByteOffset()));
 			// End offset is exclusive byte offset where last record ends and the next one would begin
 			startCmd = startCmd.replace("${NODE_END_OFFSET}", Long.toString(rainbowTable.getRecords().get(endRange).getByteOffset() + rainbowTable.getRecords().get(endRange).getRecordSize() ));
-			startCmd = startCmd.replace("${NODE_RECORD_START}", Integer.toString(startRange));
-			startCmd = startCmd.replace("${NODE_RECORD_END}", Integer.toString(endRange));
+			startCmd = startCmd.replace("${NODE_RECORD_START}", Long.toString(startRange));
+			startCmd = startCmd.replace("${NODE_RECORD_END}", Long.toString(endRange));
 
 			log.debug("startCmd:\t" + startCmd);
 			
