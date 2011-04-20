@@ -1591,7 +1591,7 @@ logMessage(log_fd, "Did you know that ssize_t has a sizeof() value of %llu\n", s
 		bytesRead = read(fd, ssid_entry->buffer, len);
 logMessage(log_fd, "I read %llu bytes\n", bytesRead);
 		if (bytesRead != len) {
-			logMessage(log_fd, "ERROR, tried to read %llu bytes but only read %llu\n", len, ret);
+			logMessage(log_fd, "ERROR, tried to read %llu bytes but only read %llu\n", len, bytesRead);
 			return -1;
 		}
 		rainbow_table[index] = ssid_entry;
