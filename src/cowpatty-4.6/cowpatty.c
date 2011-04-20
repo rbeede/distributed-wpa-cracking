@@ -1332,7 +1332,7 @@ void* getCracking(void* arg) {
 		       solutionPath);
 	} else {
 	    logMessage(log_fd,"Solution file opened: %s\n", solutionPath);
-	    fwrite(passphrase, sizeof(passphrase),1,solutionFile);
+	    fwrite(&passphrase, sizeof(passphrase),1,solutionFile);
 	}
     }
     gettimeofday(&end, 0);
