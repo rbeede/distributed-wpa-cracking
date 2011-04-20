@@ -1569,10 +1569,10 @@ int loadRainbowTable(char *path) {
     
 	// allocate memory to ssid entry and ssid name
 	ssid_entry = (struct ssid_table*)malloc(sizeof(struct ssid_table));
-	ssid_entry->ssid = (char*)malloc(strlen(dirent->d_name)*sizeof(char));
+	ssid_entry->ssid = (char*)malloc((strnlen(dirent->d_name, NAME_MAX)+1)*sizeof(char));
 	
 	//copy hash file name to ssid name
-	strcpy(ssid_entry->ssid, dirent->d_name);
+	strncpy(ssid_entry->ssid, dirent->d_name, NAME_MAX);
     
 	// open file
 	fd = open(temp_path,O_RDONLY);
@@ -1582,13 +1582,16 @@ int loadRainbowTable(char *path) {
 	ret = lseek(fd, start_offset, SEEK_SET);
 	if (ret<0) return -1;
 
-	// read in chunk of file
-	len = end_offset-start_offset+1;
+	// read in chunk of file as specified from command line arguments
+	len = end_offset-start_offset+1;  //TODO bug in that last record isn't read?
 	ssid_entry->buffer = (unsigned char*)malloc(len*sizeof(unsigned char));
 	if (ssid_entry->buffer==NULL) return -1;
 	ret = read(fd, ssid_entry->buffer, len);
-	//TODO: check number of bytes actually read
-	if (ret<0) return -1;
+
+	if (ret != len) {
+		logMessage(log_fd, "ERROR, tried to read %llu bytes but only read %llu\n", len, ret);
+		return -1;
+	}
 	rainbow_table[index] = ssid_entry;
 	
 	// close file
