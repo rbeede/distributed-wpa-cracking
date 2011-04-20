@@ -165,7 +165,7 @@ public class Job implements Runnable {
 		final String solution = br.readLine();
 		br.close();
 		
-		return solution;
+		return solution.replaceAll("[\u0000-\001F]", "");  // remove control chars
 	}
 	
 	
