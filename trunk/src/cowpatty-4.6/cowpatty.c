@@ -1570,7 +1570,7 @@ int loadRainbowTable(char *path) {
 		ssid_entry->ssid = (char*)malloc((strnlen(dirent->d_name, NAME_MAX)+1)*sizeof(char));
 logMessage(log_fd, "Allocated memory for ssid_entry and ->ssid\n");
 		//copy hash file name to ssid name
-		strncpy(ssid_entry->ssid, dirent->d_name, NAME_MAX);
+		strncpy(ssid_entry->ssid, dirent->d_name, strnlen(dirent->d_name, NAME_MAX)+1);
 logMessage(log_fd, "->ssid is %s\n", ssid_entry->ssid);
 		// open file
 		fd = open(temp_path,O_RDONLY);
