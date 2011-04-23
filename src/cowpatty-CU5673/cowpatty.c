@@ -53,6 +53,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/time.h>
 #include <fcntl.h>
 
 #include "cowpatty.h"
@@ -133,6 +134,7 @@ int logMessage(int fd, const char* format, ...) {
     int ret;                   // return value
     char msg[MAX_LOG_STR];     // message to log
     char total[MAX_LOG_STR];   // total buffer to output
+    char temp[MAX_LOG_STR];
     va_list args;              // arguments from formatted string
 
     // clear memory
@@ -146,18 +148,22 @@ int logMessage(int fd, const char* format, ...) {
 
 	
 	// Get the current time so we can output it in the log as a nicely formatted one :)
-	time_t rawtime;
-	time (&rawtime);
+	struct timeval tv;
+    gettimeofday(&tv,NULL);
+    unsigned long long milis = (unsigned long long)tv.tv_usec/1000;
 	struct tm * ptm;
-	ptm = gmtime (&rawtime);  // No messing with time zones and daylight savings time
-	
+	ptm = gmtime (&tv.tv_sec);  // No messing with time zones and daylight savings time
+
 	char currTimeFormatted[27];  // sizeof(currTimeFormatted) works on this since it isn't a pointer to a malloc
 	// format comes out with 0 padded numbers and looks like:  "YYYY-mm-dd HH:MM:SS +0000\t" or "YYYY-mm-dd HH:MM:SS -0000\t"
 	//	where +/-0000 is the time zone offset and \t means a single tab character
-	strftime(currTimeFormatted, sizeof(currTimeFormatted), "%Y-%m-%d %H:%M:%S %z\t", ptm);  // %z is a GNU extension
+	strftime(currTimeFormatted, sizeof(currTimeFormatted), "%Y-%m-%d %H:%M:%S ", ptm);  // %z is a GNU extension
 	strncat(total, currTimeFormatted, 26);  // add the formatted date to the line
 	
-	strncat(total, msg, MAX_LOG_STR - 26);  // minus 26 for characters in date/time
+    sprintf(temp,"%llu: ",milis);
+    int len = strlen(temp);
+    strcat(total,temp);
+    strncat(total, msg, MAX_LOG_STR - len);  // minus 26 for characters in date/time
 	
 	
     // write buffer and flush
