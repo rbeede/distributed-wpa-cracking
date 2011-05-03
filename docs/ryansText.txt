@@ -7,3 +7,12 @@ The worker nodes log messages to the network mounted file system so that they ca
 Master node
 
 The master node log was made available via the web application.  This was invaluable for testing purposes.  It allowed us to verify both the data being sent to the worker and the messages being received by the master from the worker.  The master node log was also the location where error messages from the worker nodes could be seen.  To simplify the main web interface, error messages are kept to a minimum.  More verbose error messages are easily visible from the master node log.
+
+
+
+
+
+
+64 bit issue
+
+Given the vast memory requirements of this system, we were restricted to 64-bit hardware.  In addition to the hardware constraints, caution had to be used when addressing memory.  Integers were not sufficient in the scenario.  We had to use long longs to properly address our in memory datastructures.  In our initial testing, this was not a problem because we used a scaled down version of the rainbow table.  However, once we scaled the rainbow table up to its full size, we soon ran into errors.  This was simply fixed by using the proper data types for our memory offsets.
