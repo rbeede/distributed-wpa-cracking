@@ -10,6 +10,13 @@ struct rainbow_table_record {
 
 Figure x: struct for rainbow table record
 
+Note that this structure is packed so that we can be sure of the byte alignment.  This is important so that we can read through the rainbow table efficiently.
 
 
+
+
+------------
+Conclusions:
+------------
+Replace XXXXXX with 996358
 
