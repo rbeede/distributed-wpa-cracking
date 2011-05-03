@@ -1,18 +1,4 @@
-------------
-Conclusions:
-------------
-By loading the rainbow table into memory and distributing the computation, our system can achieve a performance improvement of nearly a factor of 8.  In terms of world time, this translates to an improvement of several seconds.  While this may seem trivial, the value added here is that this solution is much more scalable and suitable to function as a service.  
-
-
-
---------------
-Securing WIFI:
---------------
-In this paper we have shown that wireless security is still imperfect.  Even more sophisticated security protocols like WPA2 are still susceptible to attack.  So how does the average person protect their wireless networks.  There are three key things that can be done to improve security of wireless networks:
--Use WPA2-PSK (Enterprise if possible)
--Use a non-trivial network name or SSID
--Use a non-trivial passphrase if using PSK
-
-As simple as these measures may seem, many people fail to do them.  As a result, personal wireless networks remain a key point of attack for many cybercriminals.  
-
-So what exactly is a non-trivial SSID and passphrase?  First of all, many wireless networks will suggest a default SSID when they are first setup.  An example of this is the "linksys" SSID.  At a minimum, this default SSID should be changed.  Ideally, it would be contain upper-case and lower-case characters as well as numbers and non-alphanumerical characters.  The same principles apply to choosing a passphrase.  By performing these simple tasks, a user can significantly increase the security of their wireless networks.  It should be noted that these precautions mainly guard against dictionary based attacks similar to the one presented here.  Brute force attacks would still be possible.  However, due to the computational requirements, brute force attacks are much less likely to be a significant threat at this time.
+--------
+Results:
+--------
+In addition to the performance of the system for doing the rainbow table lookup.  The rainbow table load time should be taken into account.  In this system, the rainbow table is 40 GB in size.  With eight worker nodes, each node must load 5 GB of data into memory.  This is a time consuming and very serial process.  We found that it could take anywhere from 2 to 6 minutes for a single worker node to read its designated portion of the rainbow table.  Although this process is time consuming, it only needs to be performed once.
