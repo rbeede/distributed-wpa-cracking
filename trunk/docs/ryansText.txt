@@ -1,22 +1,9 @@
-------------
-Computation:
-------------
+System logging is performed on both the master node and the worker nodes.  This was useful not only for debugging purposes but also for gathering more fine grained results.  
 
-struct rainbow_table_record {
-    uint8_t rec_size;
-    char *passphrase;
-    uint8_t pmk[32];
-} __attribute__ ((packed));
+Worker node
 
-Figure x: struct for rainbow table record
+The worker nodes log messages to the network mounted file system so that they can easily be read from the master node.  Each log outputs a millisecond scale time stamp along with the log message.  These timestamps were used when collecting our experimental data.  The web application did not provide sufficient resolution for our needs given that it only queries the workers every 5 seconds.  
 
-Note that this structure is packed so that we can be sure of the byte alignment.  This is important so that we can read through the rainbow table efficiently.
+Master node
 
-
-
-
-------------
-Conclusions:
-------------
-Replace XXXXXX with 996358
-
+The master node log was made available via the web application.  This was invaluable for testing purposes.  It allowed us to verify both the data being sent to the worker and the messages being received by the master from the worker.  The master node log was also the location where error messages from the worker nodes could be seen.  To simplify the main web interface, error messages are kept to a minimum.  More verbose error messages are easily visible from the master node log.
